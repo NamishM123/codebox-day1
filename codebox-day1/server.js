@@ -1,33 +1,33 @@
+// Server startup and middleware setup.
+// Route handlers live in routes/, business logic in services/, auth in middleware/.
+
+require("dotenv").config();
+
 const express = require("express");
+const usersRouter = require("./routes/users");
+const { requireAuth } = require("./middleware/auth");
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-// In-memory user data (no database yet)
-const users = [
-  { id: 1, name: "Alex" },
-  { id: 2, name: "Sam" },
-];
+// Middleware
+app.use(express.json());
 
+// Public routes
 app.get("/", (req, res) => {
   res.send("Hello from CodeBox!");
 });
 
-// Return the full list of users
-app.get("/api/users", (req, res) => {
-  res.json(users);
-});
+app.use("/api/users", usersRouter);
 
-// Return a single user by id, or 404 if not found
-app.get("/api/users/:id", (req, res) => {
-  const id = Number(req.params.id);
-  const user = users.find((u) => u.id === id);
-
-  if (!user) {
-    return res.status(404).json({ error: `User ${req.params.id} not found` });
-  }
-
-  res.json(user);
+// Protected route: requires a valid JWT (see middleware/auth.js).
+app.get("/api/me", requireAuth, (req, res) => {
+  res.json({
+    id: 1,
+    name: "Alex",
+    email: "alex@codebox.dev",
+    role: "member",
+  });
 });
 
 app.listen(PORT, () => {
