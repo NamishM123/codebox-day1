@@ -145,9 +145,12 @@ async function seedIfEmpty() {
 }
 
 const ready = (async () => {
-  // On Supabase the schema is created once via migration, so skip the DDL
-  // round-trips on every cold start. Locally (PGlite) we always ensure it.
-  if (!useSupabase) await initSchema();
+  // In production the Supabase DB is already provisioned (schema via migration,
+  // demo data seeded), so do NO boot work — query directly. This avoids a
+  // transient boot failure poisoning a serverless instance. Locally (PGlite)
+  // we set up the schema and seed on first run.
+  if (useSupabase) return;
+  await initSchema();
   await seedIfEmpty();
 })();
 
