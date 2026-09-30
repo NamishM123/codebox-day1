@@ -5,18 +5,26 @@
 
 require("dotenv").config();
 
+const fs = require("fs");
+const path = require("path");
 const express = require("express");
 const usersRouter = require("./routes/users");
 const { requireAuth } = require("./middleware/auth");
 
 const app = express();
 
+// Load the single-page UI once at startup.
+const indexHtml = fs.readFileSync(
+  path.join(__dirname, "public", "index.html"),
+  "utf8"
+);
+
 // Middleware
 app.use(express.json());
 
-// Public routes
+// Homepage: a small UI that lists, creates, and deletes users via the API.
 app.get("/", (req, res) => {
-  res.send("Hello from CodeBox!");
+  res.type("html").send(indexHtml);
 });
 
 // Health check
