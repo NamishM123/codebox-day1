@@ -9,8 +9,10 @@
 
 const crypto = require("crypto");
 const path = require("path");
+const os = require("os");
 
 const useSupabase = Boolean(process.env.DATABASE_URL);
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
 
 let backend;
 if (useSupabase) {
@@ -22,10 +24,14 @@ if (useSupabase) {
   });
   backend = { query: (sql, params) => pool.query(sql, params) };
 } else {
+  // Local dev / tests, or a Vercel deploy before DATABASE_URL is configured.
+  // On serverless the app dir is read-only, so PGlite must live in /tmp
+  // (ephemeral — set DATABASE_URL to a Supabase project for durable storage).
   const { PGlite } = require("@electric-sql/pglite");
-  const pg = process.env.PGLITE_MEMORY
-    ? new PGlite()
-    : new PGlite(process.env.PGLITE_DIR || path.join(__dirname, ".pgdata"));
+  const dir =
+    process.env.PGLITE_DIR ||
+    (isServerless ? path.join(os.tmpdir(), "pgdata") : path.join(__dirname, ".pgdata"));
+  const pg = process.env.PGLITE_MEMORY ? new PGlite() : new PGlite(dir);
   backend = { query: (sql, params) => pg.query(sql, params || []) };
 }
 
