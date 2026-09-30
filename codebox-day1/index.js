@@ -1,11 +1,9 @@
-const express = require("express");
+// Application entry point: starts the HTTP server.
+// The Express app (routes, middleware, DB wiring) is defined in server.js.
 
-const app = express();
-const PORT = 3000;
+const app = require("./server");
 
-app.get("/", (req, res) => {
-  res.send("hello codebox");
-});
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);

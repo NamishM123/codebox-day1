@@ -1,5 +1,7 @@
-// Server startup and middleware setup.
-// Route handlers live in routes/, business logic in services/, auth in middleware/.
+// Express app definition and middleware setup.
+// Route handlers live in routes/, business logic in services/, auth in
+// middleware/, and the SQLite database in db.js. This module exports the
+// configured app; index.js is responsible for starting the HTTP server.
 
 require("dotenv").config();
 
@@ -8,7 +10,6 @@ const usersRouter = require("./routes/users");
 const { requireAuth } = require("./middleware/auth");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
@@ -18,6 +19,12 @@ app.get("/", (req, res) => {
   res.send("Hello from CodeBox!");
 });
 
+// Health check
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
+});
+
+// Users resource: full CRUD backed by SQLite.
 app.use("/api/users", usersRouter);
 
 // Protected route: requires a valid JWT (see middleware/auth.js).
@@ -30,6 +37,4 @@ app.get("/api/me", requireAuth, (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+module.exports = app;
