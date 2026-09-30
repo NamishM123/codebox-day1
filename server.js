@@ -1,15 +1,16 @@
-// Express app definition and middleware setup.
-// Route handlers live in routes/, business logic in services/, auth in
-// middleware/, and the SQLite database in db.js. This module exports the
-// configured app; index.js is responsible for starting the HTTP server.
+// Express app for CodeBox Board — a coding-club members' board.
+// Auth lives in routes/auth.js, board CRUD in routes/posts.js, data logic in
+// services/, JWT in middleware/auth.js, and the SQLite DB in db.js.
+// This module exports the app; index.js starts the HTTP server.
 
 require("dotenv").config();
 
 const fs = require("fs");
 const path = require("path");
 const express = require("express");
-const usersRouter = require("./routes/users");
-const { requireAuth } = require("./middleware/auth");
+
+const authRouter = require("./routes/auth");
+const postsRouter = require("./routes/posts");
 
 const app = express();
 
@@ -19,10 +20,9 @@ const indexHtml = fs.readFileSync(
   "utf8"
 );
 
-// Middleware
 app.use(express.json());
 
-// Homepage: a small UI that lists, creates, and deletes users via the API.
+// Homepage: the board UI (register/login + create/edit/delete posts).
 app.get("/", (req, res) => {
   res.type("html").send(indexHtml);
 });
@@ -32,17 +32,8 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-// Users resource: full CRUD backed by SQLite.
-app.use("/api/users", usersRouter);
-
-// Protected route: requires a valid JWT (see middleware/auth.js).
-app.get("/api/me", requireAuth, (req, res) => {
-  res.json({
-    id: 1,
-    name: "Alex",
-    email: "alex@codebox.dev",
-    role: "member",
-  });
-});
+// API
+app.use("/api/auth", authRouter);
+app.use("/api/posts", postsRouter);
 
 module.exports = app;

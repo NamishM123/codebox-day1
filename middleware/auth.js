@@ -1,19 +1,18 @@
-// JWT verification middleware.
-// Expects an HS256 token in: Authorization: Bearer <token>
-// Verifies the signature and expiration using JWT_SECRET from the environment.
+// JWT helpers + verification middleware.
+// Tokens are HS256, signed with JWT_SECRET. A stable dev fallback is used
+// when the env var is unset so the app runs out-of-the-box (set a real
+// JWT_SECRET in production / Vercel env vars).
 
 const jwt = require("jsonwebtoken");
 
+const SECRET = process.env.JWT_SECRET || "codebox-club-dev-secret-change-me";
+
+function signToken(payload) {
+  return jwt.sign(payload, SECRET, { algorithm: "HS256", expiresIn: "7d" });
+}
+
+// Require a valid Bearer token. On success, attaches req.user = { id, username }.
 function requireAuth(req, res, next) {
-  const secret = process.env.JWT_SECRET;
-
-  // No hardcoded/fallback secret: fail clearly if it is not configured.
-  if (!secret) {
-    return res
-      .status(500)
-      .json({ error: "Server misconfigured: JWT_SECRET is not set" });
-  }
-
   const header = req.headers.authorization || "";
   const [scheme, token] = header.split(" ");
 
@@ -24,13 +23,12 @@ function requireAuth(req, res, next) {
   }
 
   try {
-    const payload = jwt.verify(token, secret, { algorithms: ["HS256"] });
-    req.user = payload; // make token claims available to the route
+    const payload = jwt.verify(token, SECRET, { algorithms: ["HS256"] });
+    req.user = { id: payload.sub, username: payload.username };
     next();
   } catch (err) {
-    // Covers invalid signature, expired token, wrong algorithm, etc.
     return res.status(401).json({ error: "Invalid or expired token" });
   }
 }
 
-module.exports = { requireAuth };
+module.exports = { signToken, requireAuth };

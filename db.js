@@ -1,5 +1,6 @@
 // SQLite database setup using Node's built-in `node:sqlite` (Node 22+).
-// A single file-based database lives on disk.
+// Two tables: members (auth) and posts (the club board). Full CRUD lives
+// on posts; members power authentication.
 // No external database server or native dependencies are required.
 
 const { DatabaseSync } = require("node:sqlite");
@@ -7,11 +8,12 @@ const path = require("path");
 const os = require("os");
 
 // Pick a writable location for the DB file:
-//  - DB_PATH env var wins (used by tests / custom setups)
-//  - On Vercel (and other serverless hosts) the app directory is READ-ONLY;
-//    only the OS temp dir (/tmp) is writable, so use that there.
+//  - DB_PATH env var wins (tests / custom setups)
+//  - On Vercel/Lambda the app dir is READ-ONLY; only the temp dir is writable.
 //  - Locally, keep the DB file next to this module.
-const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const isServerless = Boolean(
+  process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME
+);
 const DB_FILE =
   process.env.DB_PATH ||
   (isServerless
@@ -20,21 +22,24 @@ const DB_FILE =
 
 const db = new DatabaseSync(DB_FILE);
 
-// Create the users table if it does not already exist.
 db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id    INTEGER PRIMARY KEY AUTOINCREMENT,
-    name  TEXT NOT NULL,
-    email TEXT NOT NULL UNIQUE
-  )
-`);
+  CREATE TABLE IF NOT EXISTS members (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    username      TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    password_salt TEXT NOT NULL,
+    created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+  );
 
-// Seed a couple of rows the first time the DB is created, so the demo has data.
-const { count } = db.prepare("SELECT COUNT(*) AS count FROM users").get();
-if (count === 0) {
-  const insert = db.prepare("INSERT INTO users (name, email) VALUES (?, ?)");
-  insert.run("Alex", "alex@codebox.dev");
-  insert.run("Sam", "sam@codebox.dev");
-}
+  CREATE TABLE IF NOT EXISTS posts (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    member_id  INTEGER NOT NULL,
+    title      TEXT NOT NULL,
+    body       TEXT NOT NULL,
+    category   TEXT NOT NULL DEFAULT 'announcement',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE
+  );
+`);
 
 module.exports = db;
