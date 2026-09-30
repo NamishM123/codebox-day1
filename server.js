@@ -42,6 +42,23 @@ app.get("/api/dbcheck", async (req, res) => {
   }
 });
 
+// Temporary auth diagnostic: runs the exact register logic via GET.
+app.get("/api/authcheck", async (req, res) => {
+  const { registerMember } = require("./services/authService");
+  const { signToken } = require("./middleware/auth");
+  const db = require("./db");
+  const t0 = Date.now();
+  try {
+    const u = "authdiag_" + Date.now();
+    const user = await registerMember(u, "diag", "password123");
+    const token = signToken({ sub: user.id, username: user.username, role: user.role });
+    await db.query("DELETE FROM members WHERE id = $1", [user.id]);
+    res.json({ ok: true, ms: Date.now() - t0, user, tokenLen: token.length });
+  } catch (e) {
+    res.status(500).json({ ok: false, ms: Date.now() - t0, error: e.message });
+  }
+});
+
 // Temporary write diagnostic: a parameterized INSERT (mirrors register).
 app.get("/api/dbwrite", async (req, res) => {
   const db = require("./db");
