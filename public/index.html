@@ -410,14 +410,15 @@
           $("logout-btn").onclick = logout;
         } else {
           $("whoami").innerHTML = `<button class="btn sm" id="login-btn">Log in / Sign up</button>`;
-          $("login-btn").onclick = openAuth;
+          $("login-btn").onclick = () => openAuth();
         }
       }
       function logout() {
         localStorage.removeItem("cbm_token"); state.token = null; state.user = null;
         renderWho(); renderNav(); go("projects"); loadProjects();
       }
-      function openAuth(mode = "login") {
+      function openAuth(mode) {
+        mode = mode === "register" ? "register" : "login";
         openModal(`
           <button class="x" onclick="closeModal()">&times;</button>
           <h3 id="auth-h">${mode === "login" ? "Welcome back" : "Join CodeBox Match"}</h3>
