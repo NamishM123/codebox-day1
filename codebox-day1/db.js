@@ -1,12 +1,22 @@
 // SQLite database setup using Node's built-in `node:sqlite` (Node 22+).
-// A single file-based database lives on disk, so data survives restarts.
+// A single file-based database lives on disk.
 // No external database server or native dependencies are required.
 
 const { DatabaseSync } = require("node:sqlite");
 const path = require("path");
+const os = require("os");
 
-// Store the DB file next to this module. Overridable via DB_PATH for tests.
-const DB_FILE = process.env.DB_PATH || path.join(__dirname, "codebox.db");
+// Pick a writable location for the DB file:
+//  - DB_PATH env var wins (used by tests / custom setups)
+//  - On Vercel (and other serverless hosts) the app directory is READ-ONLY;
+//    only the OS temp dir (/tmp) is writable, so use that there.
+//  - Locally, keep the DB file next to this module.
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const DB_FILE =
+  process.env.DB_PATH ||
+  (isServerless
+    ? path.join(os.tmpdir(), "codebox.db")
+    : path.join(__dirname, "codebox.db"));
 
 const db = new DatabaseSync(DB_FILE);
 
