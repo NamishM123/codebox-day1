@@ -42,6 +42,23 @@ app.get("/api/dbcheck", async (req, res) => {
   }
 });
 
+// Temporary write diagnostic: a parameterized INSERT (mirrors register).
+app.get("/api/dbwrite", async (req, res) => {
+  const db = require("./db");
+  const t0 = Date.now();
+  try {
+    const u = "diag_" + Date.now();
+    const ins = await db.query(
+      "INSERT INTO members (username, name, role, password_hash, password_salt) VALUES ($1,$2,$3,$4,$5) RETURNING id",
+      [u, "diag", "developer", "h", "s"]
+    );
+    await db.query("DELETE FROM members WHERE id = $1", [ins[0].id]);
+    res.json({ ok: true, ms: Date.now() - t0, insertedId: ins[0].id });
+  } catch (e) {
+    res.status(500).json({ ok: false, ms: Date.now() - t0, error: e.message, code: e.code || null });
+  }
+});
+
 // API
 app.use("/api/auth", authRouter);
 app.use("/api/profiles", profilesRouter);
