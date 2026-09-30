@@ -55,6 +55,7 @@ db.exec(`
     difficulty   TEXT NOT NULL DEFAULT 'intermediate',
     timeline     TEXT NOT NULL DEFAULT '',
     accent       TEXT NOT NULL DEFAULT '#7b61ff',
+    image        TEXT NOT NULL DEFAULT '',
     status       TEXT NOT NULL DEFAULT 'open',
     created_at   TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (created_by) REFERENCES members(id) ON DELETE CASCADE
@@ -84,6 +85,7 @@ function ensureColumn(table, column, ddl) {
 }
 ensureColumn("members", "role", "role TEXT NOT NULL DEFAULT 'developer'");
 ensureColumn("members", "name", "name TEXT NOT NULL DEFAULT ''");
+ensureColumn("projects", "image", "image TEXT NOT NULL DEFAULT ''");
 
 // --- Password hashing (kept here so seeding has no circular dep) ---
 function hash(password, salt = crypto.randomBytes(16).toString("hex")) {
@@ -118,13 +120,14 @@ if (memberCount === 0) {
   );
 
   const insProject = db.prepare(
-    `INSERT INTO projects (created_by, tech_lead_id, title, description, category, tech_stack, needed_roles, difficulty, timeline, accent, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO projects (created_by, tech_lead_id, title, description, category, tech_stack, needed_roles, difficulty, timeline, accent, image, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
-  insProject.run(leadId, leadId, "Prismatic Rift", "A real-time collaborative shader playground for the club to build WebGL art together.", "Web", "React, WebGL, Node", "Frontend, Graphics", "advanced", "6 weeks", "#7b61ff", "open");
-  insProject.run(leadId, leadId, "Ember Clouds", "Weather-driven generative art installation for the club showcase night.", "Creative", "Python, TouchDesigner", "Backend, Design", "intermediate", "4 weeks", "#ff4114", "open");
-  insProject.run(adminId, null, "Neon Portal", "A campus events aggregator with a slick dark UI and push notifications.", "Mobile", "Flutter, Firebase", "Mobile, Backend", "intermediate", "8 weeks", "#00c8ff", "reviewing");
-  insProject.run(devId, null, "Launch Window", "Track club rocketry telemetry live from a ground-station dashboard.", "Hardware", "Next.js, MQTT, Postgres", "Fullstack, Data", "advanced", "10 weeks", "#14307a", "open");
+  const img = (id) => `https://picsum.photos/id/${id}/1200/800`;
+  insProject.run(leadId, leadId, "Prismatic Rift", "A real-time collaborative shader playground for the club to build WebGL art together.", "Web", "React, WebGL, Node", "Frontend, Graphics", "advanced", "6 weeks", "#7b61ff", img(1069), "open");
+  insProject.run(leadId, leadId, "Ember Clouds", "Weather-driven generative art installation for the club showcase night.", "Creative", "Python, TouchDesigner", "Backend, Design", "intermediate", "4 weeks", "#ff4114", img(1039), "open");
+  insProject.run(adminId, null, "Neon Portal", "A campus events aggregator with a slick dark UI and push notifications.", "Mobile", "Flutter, Firebase", "Mobile, Backend", "intermediate", "8 weeks", "#00c8ff", img(1016), "reviewing");
+  insProject.run(devId, null, "Launch Window", "Track club rocketry telemetry live from a ground-station dashboard.", "Hardware", "Next.js, MQTT, Postgres", "Fullstack, Data", "advanced", "10 weeks", "#14307a", img(1018), "open");
 }
 
 module.exports = db;

@@ -36,8 +36,8 @@ function create(createdBy, d) {
   const result = db
     .prepare(
       `INSERT INTO projects
-        (created_by, tech_lead_id, title, description, category, tech_stack, needed_roles, difficulty, timeline, accent, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        (created_by, tech_lead_id, title, description, category, tech_stack, needed_roles, difficulty, timeline, accent, image, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .run(
       Number(createdBy),
@@ -50,6 +50,7 @@ function create(createdBy, d) {
       d.difficulty || "intermediate",
       d.timeline || "",
       d.accent || "#7b61ff",
+      d.image || "",
       STATUSES.includes(d.status) ? d.status : "open"
     );
   return getById(result.lastInsertRowid);
@@ -70,16 +71,17 @@ function update(id, d) {
     difficulty: d.difficulty ?? existing.difficulty,
     timeline: d.timeline ?? existing.timeline,
     accent: d.accent ?? existing.accent,
+    image: d.image ?? existing.image,
     status: STATUSES.includes(d.status) ? d.status : existing.status,
     tech_lead_id:
       d.tech_lead_id === undefined ? existing.tech_lead_id : d.tech_lead_id ? Number(d.tech_lead_id) : null,
   };
 
   db.prepare(
-    `UPDATE projects SET title=?, description=?, category=?, tech_stack=?, needed_roles=?, difficulty=?, timeline=?, accent=?, status=?, tech_lead_id=? WHERE id=?`
+    `UPDATE projects SET title=?, description=?, category=?, tech_stack=?, needed_roles=?, difficulty=?, timeline=?, accent=?, image=?, status=?, tech_lead_id=? WHERE id=?`
   ).run(
     next.title, next.description, next.category, next.tech_stack, next.needed_roles,
-    next.difficulty, next.timeline, next.accent, next.status, next.tech_lead_id, Number(id)
+    next.difficulty, next.timeline, next.accent, next.image, next.status, next.tech_lead_id, Number(id)
   );
   return getById(id);
 }

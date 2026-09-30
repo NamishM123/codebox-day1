@@ -77,13 +77,21 @@
         position: relative; height: 62vh; min-height: 420px; overflow: hidden;
         background: #000; user-select: none;
       }
-      .hero-bg {
-        position: absolute; inset: 0;
-        transition: background 0.8s ease;
+      .hero-bg { position: absolute; inset: 0; overflow: hidden; }
+      .hero-photo {
+        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+        transform: scale(1.15); animation: slowzoom 14s ease-in-out infinite alternate;
+        transition: opacity 0.6s ease;
       }
-      .hero-bg::after {
-        content: ""; position: absolute; inset: 0;
-        background: linear-gradient(to bottom, rgba(0,0,0,0.35), rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.55));
+      @keyframes slowzoom { from { transform: scale(1.12); } to { transform: scale(1.25); } }
+      .grade { position: absolute; inset: 0; transition: background-color 0.7s ease; }
+      .grade-color { mix-blend-mode: color; }
+      .grade-mult { mix-blend-mode: multiply; opacity: 0.5; }
+      .hero-wash { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.05) 42%, rgba(0,0,0,0.62)); }
+      .grain {
+        position: absolute; inset: 0; pointer-events: none; opacity: 0.16; mix-blend-mode: overlay;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        background-size: 180px 180px;
       }
       .hero-top {
         position: absolute; top: 1.1rem; left: 0; right: 0; z-index: 3;
@@ -111,10 +119,14 @@
       .hcard {
         position: relative; flex: 0 0 auto; width: 150px; height: 130px; border-radius: 4px; overflow: hidden;
         border: 1px solid rgba(255,255,255,0.14); transition: height 0.5s cubic-bezier(0.22,1,0.36,1), box-shadow 0.4s;
-        display: flex; align-items: flex-end; padding: 8px; color: #fff;
+        display: flex; align-items: flex-end; padding: 8px; color: #fff; background: #0a0d1a;
       }
+      .hcard img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      .hcard .hgrade { position: absolute; inset: 0; mix-blend-mode: color; }
+      .hcard .hdark { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.6), transparent 60%); }
+      .hcard:not(.active) .hdark { background: rgba(0,0,0,0.28); }
       .hcard.active { height: 250px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
-      .hcard .ht { font-size: 0.7rem; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,0.6); opacity: 0; transition: opacity 0.3s; }
+      .hcard .ht { position: relative; font-size: 0.7rem; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,0.6); opacity: 0; transition: opacity 0.3s; }
       .hcard.active .ht { opacity: 1; }
       .hcard .hstat { position: absolute; top: 6px; left: 8px; font-size: 0.56rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.85; }
       .hero-rail { position: absolute; left: 5vw; bottom: 1.1rem; width: 200px; z-index: 3; }
@@ -134,16 +146,26 @@
       /* ---------- Project cards ---------- */
       .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.1rem; }
       .pcard {
-        position: relative; border-radius: 16px; padding: 1.2rem;
+        position: relative; border-radius: 16px; overflow: hidden;
         background: var(--panel); backdrop-filter: blur(12px);
-        border: 1px solid var(--line); overflow: hidden;
+        border: 1px solid var(--line);
         transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
       }
-      .pcard::before {
-        content: ""; position: absolute; inset: 0 0 auto 0; height: 3px;
-        background: var(--pc-accent, var(--accent));
-      }
       .pcard:hover { transform: translateY(-4px); border-color: var(--line-strong); box-shadow: 0 18px 50px rgba(0,0,0,0.35); }
+      .pc-media {
+        position: relative; height: 150px; overflow: hidden; background: #0a0d1a;
+        border-bottom: 3px solid var(--pc-accent, var(--accent));
+      }
+      .pc-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+      .pcard:hover .pc-media img { transform: scale(1.06); }
+      .pc-media .m-grade { position: absolute; inset: 0; mix-blend-mode: color; background: var(--pc-accent, var(--accent)); }
+      .pc-media .m-mult { position: absolute; inset: 0; mix-blend-mode: multiply; opacity: 0.35; background: var(--pc-accent, var(--accent)); }
+      .pc-media .m-wash { position: absolute; inset: 0; background: linear-gradient(to top, rgba(6,7,12,0.85), transparent 65%); }
+      .pc-media .m-pill { position: absolute; top: 0.7rem; left: 0.7rem; z-index: 2; }
+      .pc-media .m-title { position: absolute; left: 0.9rem; right: 0.9rem; bottom: 0.6rem; z-index: 2; }
+      .pc-media .m-title h3 { margin: 0; font-size: 1.15rem; text-shadow: 0 2px 12px rgba(0,0,0,0.6); }
+      .pc-media .m-title .by { font-size: 0.72rem; color: rgba(255,255,255,0.82); }
+      .pc-body { padding: 1.1rem 1.2rem 1.2rem; }
       .pcard .pc-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.6rem; }
       .pcard h3 { margin: 0.2rem 0 0; font-size: 1.12rem; }
       .pcard .by { font-size: 0.72rem; color: var(--muted); }
@@ -210,7 +232,13 @@
 
     <!-- HERO CAROUSEL -->
     <div class="hero" id="hero">
-      <div class="hero-bg" id="hero-bg"></div>
+      <div class="hero-bg" id="hero-bg">
+        <img class="hero-photo" id="hero-photo" alt="" aria-hidden="true" />
+        <div class="grade grade-color" id="grade-color"></div>
+        <div class="grade grade-mult" id="grade-mult"></div>
+        <div class="hero-wash"></div>
+        <div class="grain"></div>
+      </div>
       <div class="hero-top">
         <button onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8598; Top</button>
         <span class="wm">CODEBOX MATCH</span>
@@ -392,24 +420,35 @@
         if (manager) actions += `<button class="btn ghost sm" data-appl="${p.id}">Applicants (${p.interested})</button>
                                  <button class="btn ghost sm" data-edit="${p.id}">Edit</button>
                                  <button class="btn danger sm" data-del="${p.id}">Delete</button>`;
-        if (!state.user) actions += `<span class="pc-foot"><span class="meta">Log in to apply</span></span>`;
+        const img = p.image || imageFor(p);
         return `
           <div class="pcard" style="--pc-accent:${esc(p.accent)}">
-            <div class="pc-top">
-              <div>
-                <span class="pill ${esc(p.status)}">${esc(p.status.replace("_"," "))}</span>
+            <div class="pc-media">
+              <img src="${esc(img)}" alt="" loading="lazy" onerror="this.style.display='none'" />
+              <div class="m-grade"></div><div class="m-mult"></div><div class="m-wash"></div>
+              <span class="m-pill"><span class="pill ${esc(p.status)}">${esc(p.status.replace("_"," "))}</span></span>
+              <div class="m-title">
                 <h3>${esc(p.title)}</h3>
                 <div class="by">by ${esc(p.creator)} &middot; ${esc(p.category)} &middot; ${esc(p.difficulty)}</div>
               </div>
             </div>
-            <p class="desc">${esc(p.description)}</p>
-            <div class="badges">${stack}</div>
-            <div class="badges">${roles || '<span class="meta" style="font-size:.76rem;color:var(--muted)">No roles listed</span>'}</div>
-            <div class="pc-foot">
-              <span class="meta">&#128100; ${p.interested} interested${p.timeline ? " &middot; " + esc(p.timeline) : ""}</span>
-              <div class="pc-actions">${actions}</div>
+            <div class="pc-body">
+              <p class="desc">${esc(p.description)}</p>
+              <div class="badges">${stack}</div>
+              <div class="badges">${roles || '<span class="meta" style="font-size:.76rem;color:var(--muted)">No roles listed</span>'}</div>
+              <div class="pc-foot">
+                <span class="meta">&#128100; ${p.interested} interested${p.timeline ? " &middot; " + esc(p.timeline) : ""}</span>
+                <div class="pc-actions">${actions}</div>
+              </div>
             </div>
           </div>`;
+      }
+
+      // Deterministic fallback image if a project has none (picsum = real photos).
+      const IMG_POOL = [1015,1016,1018,1019,1035,1039,1043,1044,1057,1069,1073,1084,180,201,239,326,371,435];
+      function imageFor(p) {
+        const key = (p.id || 0) + (p.title ? p.title.length : 0);
+        return `https://picsum.photos/id/${IMG_POOL[key % IMG_POOL.length]}/1200/800`;
       }
 
       function openProjectForm(id) {
@@ -428,6 +467,7 @@
           </div>
           <div class="field"><label>Tech stack (comma-separated)</label><input id="f-stack" value="${esc(v("tech_stack"))}" placeholder="React, Node, Postgres" /></div>
           <div class="field"><label>Needed roles (comma-separated)</label><input id="f-roles" value="${esc(v("needed_roles"))}" placeholder="Frontend, Backend, Design" /></div>
+          <div class="field"><label>Cover image URL (optional &mdash; a nice one is auto-picked if blank)</label><input id="f-image" value="${esc(v("image"))}" placeholder="https://..." /></div>
           <div class="row2">
             <div class="field"><label>Timeline</label><input id="f-time" value="${esc(v("timeline"))}" placeholder="6 weeks" /></div>
             <div class="field"><label>Accent color</label><input id="f-accent" type="color" value="${esc(v("accent","#7b61ff"))}" style="height:42px;padding:4px" /></div>
@@ -444,6 +484,7 @@
             tech_stack: $("f-stack").value.split(",").map((s)=>s.trim()).filter(Boolean),
             needed_roles: $("f-roles").value.split(",").map((s)=>s.trim()).filter(Boolean),
             timeline: $("f-time").value.trim(), accent: $("f-accent").value,
+            image: $("f-image").value.trim() || `https://picsum.photos/id/${IMG_POOL[Math.floor(Math.random()*IMG_POOL.length)]}/1200/800`,
           };
           if (p) body.status = $("f-status").value;
           const res = await api(p ? "/api/projects/" + p.id : "/api/projects", { method: p ? "PUT" : "POST", body: JSON.stringify(body) });
@@ -629,8 +670,10 @@
         if (!items.length) { $("hero").style.display = "none"; return; }
         $("hero").style.display = "";
         $("strip").innerHTML = items.map((p, i) => `
-          <button class="hcard ${i === state.hero ? "active" : ""}" data-h="${i}"
-            style="background:linear-gradient(150deg, ${esc(p.accent)}, #0a0d1a)">
+          <button class="hcard ${i === state.hero ? "active" : ""}" data-h="${i}">
+            <img src="${esc(p.image || imageFor(p))}" alt="" loading="lazy" onerror="this.style.display='none'" />
+            <span class="hgrade" style="background:${esc(p.accent)}"></span>
+            <span class="hdark"></span>
             <span class="hstat">${esc(p.status.replace("_"," "))}</span>
             <span class="ht">${esc(p.title)}</span>
           </button>`).join("");
@@ -644,7 +687,12 @@
         const items = heroItems();
         const p = items[state.hero];
         if (!p) return;
-        $("hero-bg").style.background = `radial-gradient(120% 120% at 70% 20%, ${p.accent} 0%, ${p.accent}99 30%, #05060b 78%)`;
+        // Real photo, re-hued to the project's accent (MONTRA color-grade).
+        const photo = $("hero-photo");
+        const src = p.image || imageFor(p);
+        if (photo.getAttribute("src") !== src) { photo.style.opacity = 0; photo.onload = () => (photo.style.opacity = 1); photo.src = src; }
+        $("grade-color").style.backgroundColor = p.accent;
+        $("grade-mult").style.backgroundColor = p.accent;
         const t = $("hero-title");
         t.style.opacity = 0; t.style.transform = "translateY(10px)";
         setTimeout(() => {
