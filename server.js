@@ -30,6 +30,18 @@ app.get("/", (req, res) => res.type("html").send(indexHtml));
 // Health check
 app.get("/health", (req, res) => res.json({ status: "ok" }));
 
+// Temporary DB diagnostic: surfaces the real Postgres error + timing.
+app.get("/api/dbcheck", async (req, res) => {
+  const db = require("./db");
+  const t0 = Date.now();
+  try {
+    const rows = await db.query("SELECT 1 AS ok");
+    res.json({ ok: true, ms: Date.now() - t0, rows });
+  } catch (e) {
+    res.status(500).json({ ok: false, ms: Date.now() - t0, error: e.message, code: e.code || null });
+  }
+});
+
 // API
 app.use("/api/auth", authRouter);
 app.use("/api/profiles", profilesRouter);
