@@ -91,6 +91,85 @@
       .hidden { display: none !important; }
       footer { text-align: center; color: var(--muted); font-size: 0.78rem; margin-top: 1.5rem; }
       code { background: #0c1526; padding: 0.1rem 0.35rem; border-radius: 4px; }
+
+      /* ---- Projects carousel (dimensional flip) ---- */
+      .showcase { margin-bottom: 1.5rem; }
+      .showcase h2 { margin: 0 0 0.15rem; font-size: 1.1rem; }
+      .showcase .sub2 { margin: 0 0 1rem; color: var(--muted); font-size: 0.85rem; }
+      .stage {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        max-height: 420px;
+        perspective: 1400px;
+        border-radius: 16px;
+      }
+      .flipper {
+        position: absolute;
+        inset: 0;
+        transform-style: preserve-3d;
+        transition: transform 0.75s cubic-bezier(0.76, 0, 0.24, 1);
+        border-radius: 16px;
+      }
+      .face {
+        position: absolute;
+        inset: 0;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        border-radius: 16px;
+        overflow: hidden;
+        display: flex;
+        align-items: flex-end;
+        padding: 1.5rem;
+        color: #fff;
+      }
+      .face.back { transform: rotateY(180deg); }
+      .face .ftag {
+        position: absolute; top: 1rem; left: 1.25rem;
+        font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase;
+        background: rgba(0,0,0,0.28); padding: 0.25rem 0.6rem; border-radius: 999px;
+        backdrop-filter: blur(6px);
+      }
+      .face .fyear {
+        position: absolute; top: 1rem; right: 1.25rem;
+        font-size: 0.75rem; font-weight: 700; opacity: 0.9;
+      }
+      .face .fbody { max-width: 90%; }
+      .face .fbody h3 { margin: 0 0 0.35rem; font-size: 1.35rem; }
+      .face .fbody p { margin: 0 0 0.6rem; font-size: 0.9rem; opacity: 0.92; }
+      .face .fbody .tags span {
+        display: inline-block; font-size: 0.72rem; margin: 0 0.35rem 0.35rem 0;
+        padding: 0.15rem 0.5rem; border-radius: 999px;
+        background: rgba(255,255,255,0.18);
+      }
+      .stage-title {
+        position: absolute; inset: 0; z-index: 5; pointer-events: none;
+        display: flex; align-items: center; justify-content: center;
+        perspective: 1000px;
+      }
+      .stage-title .big {
+        position: absolute; text-align: center; font-weight: 800;
+        font-size: clamp(1.6rem, 6vw, 3.2rem); color: #fff;
+        text-shadow: 0 6px 30px rgba(0,0,0,0.45);
+        transition: transform 0.6s cubic-bezier(0.76,0,0.24,1), opacity 0.5s;
+        will-change: transform, opacity;
+      }
+      .carousel-ctrl {
+        display: flex; align-items: center; justify-content: center;
+        gap: 0.6rem; margin-top: 0.9rem;
+      }
+      .carousel-ctrl button {
+        height: 42px; width: 42px; border-radius: 999px; padding: 0;
+        background: transparent; color: var(--text);
+        border: 1px solid var(--line); font-size: 1.1rem; line-height: 1;
+      }
+      .carousel-ctrl button:hover { background: #ff5f00; color: #fff; border-color: #ff5f00; }
+      .dots { display: flex; gap: 0.4rem; align-items: center; }
+      .dots button {
+        height: 8px; width: 8px; border-radius: 999px; padding: 0;
+        background: rgba(255,255,255,0.28); border: none;
+      }
+      .dots button.active { width: 22px; background: #ff5f00; }
     </style>
   </head>
   <body>
@@ -102,6 +181,27 @@
         </div>
         <div class="who" id="who"></div>
       </header>
+
+      <!-- PROJECTS SHOWCASE (dimensional flip carousel) -->
+      <section class="showcase">
+        <h2>Last year's projects</h2>
+        <p class="sub2">What the club shipped &mdash; flip through the highlights</p>
+        <div class="stage" id="stage" aria-roledescription="carousel">
+          <div class="flipper" id="flipper">
+            <div class="face front" id="face-front"></div>
+            <div class="face back" id="face-back"></div>
+          </div>
+          <div class="stage-title" aria-hidden="true">
+            <div class="big" id="title-a"></div>
+            <div class="big" id="title-b" style="opacity:0"></div>
+          </div>
+        </div>
+        <div class="carousel-ctrl">
+          <button id="prev" aria-label="Previous project">&larr;</button>
+          <div class="dots" id="dots"></div>
+          <button id="next" aria-label="Next project">&rarr;</button>
+        </div>
+      </section>
 
       <!-- AUTH -->
       <div class="card" id="auth-card">
@@ -294,8 +394,124 @@
         } catch (e) {}
       }
 
+      // ---- Projects carousel (vanilla "dimensional switch") ----
+      // Edit this list with your real CodeBox projects.
+      const PROJECTS = [
+        { name: "StudyBuddy", year: "2024", tag: "Web App",
+          blurb: "AI-powered study-group matcher that pairs members by course and schedule.",
+          tags: ["React", "Node", "Postgres"],
+          grad: "linear-gradient(135deg,#ff5f00,#ff9450)" },
+        { name: "HackTrack", year: "2024", tag: "Tooling",
+          blurb: "Live hackathon dashboard: teams, submissions, and judging in one place.",
+          tags: ["Next.js", "Firebase"],
+          grad: "linear-gradient(135deg,#4cc2ff,#5b7cfa)" },
+        { name: "CampusEats", year: "2024", tag: "Mobile",
+          blurb: "Group food ordering for club events with split-the-bill checkout.",
+          tags: ["Flutter", "Stripe"],
+          grad: "linear-gradient(135deg,#a78bfa,#7c5cff)" },
+        { name: "CodeQuiz", year: "2023", tag: "Game",
+          blurb: "Real-time coding trivia the whole room plays from their phones.",
+          tags: ["Socket.io", "Express"],
+          grad: "linear-gradient(135deg,#22c55e,#0ea5e9)" },
+        { name: "DevPortfolio", year: "2023", tag: "Generator",
+          blurb: "Turns a GitHub profile into a polished portfolio site in one click.",
+          tags: ["Vue", "GitHub API"],
+          grad: "linear-gradient(135deg,#f43f5e,#f59e0b)" },
+      ];
+
+      const carousel = { i: 0, showingBack: false, animating: false, timer: null };
+
+      function faceHtml(p) {
+        return `
+          <span class="ftag">${esc(p.tag)}</span>
+          <span class="fyear">${esc(p.year)}</span>
+          <div class="fbody">
+            <h3>${esc(p.name)}</h3>
+            <p>${esc(p.blurb)}</p>
+            <div class="tags">${p.tags.map((t) => `<span>${esc(t)}</span>`).join("")}</div>
+          </div>`;
+      }
+
+      function paintDots() {
+        $("dots").innerHTML = PROJECTS.map(
+          (_, idx) => `<button data-i="${idx}" class="${idx === carousel.i ? "active" : ""}" aria-label="Go to project ${idx + 1}"></button>`
+        ).join("");
+        $("dots").querySelectorAll("button").forEach((b) => (b.onclick = () => goTo(+b.dataset.i)));
+      }
+
+      function initCarousel() {
+        const first = PROJECTS[0];
+        $("face-front").innerHTML = faceHtml(first);
+        $("face-front").style.background = first.grad;
+        $("title-a").textContent = first.name;
+        paintDots();
+        startAuto();
+      }
+
+      function flipTo(dir, newIndex) {
+        if (carousel.animating || newIndex === carousel.i) return;
+        carousel.animating = true;
+
+        const goingNext = dir === "next";
+        const p = PROJECTS[newIndex];
+        const incomingFace = carousel.showingBack ? $("face-front") : $("face-back");
+        incomingFace.innerHTML = faceHtml(p);
+        incomingFace.style.background = p.grad;
+
+        // Flip the card
+        carousel.showingBack = !carousel.showingBack;
+        const rot = carousel.showingBack ? 180 : 0;
+        $("flipper").style.transform = `rotateY(${rot}deg)`;
+
+        // Swap the big title with a translate/rotate
+        const outEl = $("title-a").style.opacity !== "0" ? $("title-a") : $("title-b");
+        const inEl = outEl.id === "title-a" ? $("title-b") : $("title-a");
+        const dx = goingNext ? 1 : -1;
+        inEl.textContent = p.name;
+        inEl.style.transition = "none";
+        inEl.style.transform = `translateX(${dx * 60}px) rotateY(${dx * 45}deg)`;
+        inEl.style.opacity = "0";
+        // force reflow
+        void inEl.offsetWidth;
+        inEl.style.transition = "";
+        outEl.style.transform = `translateX(${-dx * 60}px) rotateY(${-dx * 45}deg)`;
+        outEl.style.opacity = "0";
+        inEl.style.transform = "translateX(0) rotateY(0)";
+        inEl.style.opacity = "1";
+
+        carousel.i = newIndex;
+        paintDots();
+        setTimeout(() => { carousel.animating = false; }, 760);
+      }
+
+      function step(dir) {
+        const n = PROJECTS.length;
+        const next = dir === "next"
+          ? (carousel.i + 1) % n
+          : (carousel.i - 1 + n) % n;
+        flipTo(dir, next);
+      }
+
+      function goTo(idx) {
+        if (idx === carousel.i) return;
+        const dir = idx > carousel.i ? "next" : "prev";
+        flipTo(dir, idx);
+      }
+
+      function startAuto() {
+        stopAuto();
+        carousel.timer = window.setInterval(() => step("next"), 3200);
+      }
+      function stopAuto() { if (carousel.timer) window.clearInterval(carousel.timer); }
+
+      $("next").onclick = () => { step("next"); startAuto(); };
+      $("prev").onclick = () => { step("prev"); startAuto(); };
+      $("stage").addEventListener("mouseenter", stopAuto);
+      $("stage").addEventListener("mouseleave", startAuto);
+
       // ---- Boot ----
       async function boot() {
+        initCarousel();
         const token = localStorage.getItem("cb_token");
         if (token) {
           try {
