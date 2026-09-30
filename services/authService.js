@@ -22,51 +22,40 @@ function publicUser(m) {
   return { id: m.id, username: m.username, name: m.name, role: m.role };
 }
 
-function registerMember(username, name, password) {
+async function registerMember(username, name, password) {
   const { hash, salt } = hashPassword(password);
-  const result = db
-    .prepare(
-      "INSERT INTO members (username, name, role, password_hash, password_salt) VALUES (?, ?, 'developer', ?, ?)"
-    )
-    .run(username, name || username, hash, salt);
-  return publicUser(getById(result.lastInsertRowid));
+  const rows = await db.query(
+    "INSERT INTO members (username, name, role, password_hash, password_salt) VALUES ($1,$2,'developer',$3,$4) RETURNING *",
+    [username, name || username, hash, salt]
+  );
+  return publicUser(rows[0]);
 }
 
-function getByUsername(username) {
-  return db.prepare("SELECT * FROM members WHERE username = ?").get(username);
+async function getByUsername(username) {
+  return db.get("SELECT * FROM members WHERE username = $1", [username]);
 }
 
-function getById(id) {
-  return db.prepare("SELECT * FROM members WHERE id = ?").get(Number(id));
+async function getById(id) {
+  return db.get("SELECT * FROM members WHERE id = $1", [Number(id)]);
 }
 
-function authenticate(username, password) {
-  const m = getByUsername(username);
+async function authenticate(username, password) {
+  const m = await getByUsername(username);
   if (!m) return null;
   return verifyPassword(password, m.password_salt, m.password_hash) ? publicUser(m) : null;
 }
 
 // --- Admin operations ---
-function listUsers() {
-  return db
-    .prepare("SELECT id, username, name, role, created_at FROM members ORDER BY id")
-    .all();
+async function listUsers() {
+  return db.query("SELECT id, username, name, role, created_at FROM members ORDER BY id");
 }
 
-function setRole(id, role) {
+async function setRole(id, role) {
   if (!ROLES.includes(role)) return { ok: false, reason: "bad_role" };
-  const user = getById(id);
+  const user = await getById(id);
   if (!user) return { ok: false, reason: "not_found" };
-  db.prepare("UPDATE members SET role = ? WHERE id = ?").run(role, Number(id));
-  return { ok: true, user: publicUser(getById(id)) };
+  await db.query("UPDATE members SET role = $1 WHERE id = $2", [role, Number(id)]);
+  return { ok: true, user: publicUser(await getById(id)) };
 }
 
-module.exports = {
-  ROLES,
-  registerMember,
-  authenticate,
-  getById,
-  publicUser,
-  listUsers,
-  setRole,
-};
+module.exports = { ROLES, registerMember, authenticate, getById, publicUser, listUsers, setRole };

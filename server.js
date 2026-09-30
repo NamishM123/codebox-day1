@@ -37,4 +37,11 @@ app.use("/api/projects", projectsRouter);
 app.use("/api/applications", applicationsRouter);
 app.use("/api/admin", adminRouter);
 
+// JSON error handler (Express 5 forwards async route rejections here).
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err);
+  if (res.headersSent) return next(err);
+  res.status(500).json({ error: "Internal server error" });
+});
+
 module.exports = app;

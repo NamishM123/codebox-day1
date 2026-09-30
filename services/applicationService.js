@@ -12,51 +12,51 @@ const BASE = `
   JOIN members m ON m.id = a.developer_id
   JOIN projects p ON p.id = a.project_id`;
 
-function getById(id) {
-  return db.prepare(`${BASE} WHERE a.id = ?`).get(Number(id));
+async function getById(id) {
+  return db.get(`${BASE} WHERE a.id = $1`, [Number(id)]);
 }
 
-function listByProject(projectId) {
-  return db.prepare(`${BASE} WHERE a.project_id = ? ORDER BY a.id DESC`).all(Number(projectId));
+async function listByProject(projectId) {
+  return db.query(`${BASE} WHERE a.project_id = $1 ORDER BY a.id DESC`, [Number(projectId)]);
 }
 
-function listByDeveloper(devId) {
-  return db.prepare(`${BASE} WHERE a.developer_id = ? ORDER BY a.id DESC`).all(Number(devId));
+async function listByDeveloper(devId) {
+  return db.query(`${BASE} WHERE a.developer_id = $1 ORDER BY a.id DESC`, [Number(devId)]);
 }
 
-// Apply. Returns { ok, application } or { ok:false, reason }.
-function apply(projectId, developerId, d) {
-  const proj = db.prepare("SELECT id FROM projects WHERE id = ?").get(Number(projectId));
+async function apply(projectId, developerId, d) {
+  const proj = await db.get("SELECT id FROM projects WHERE id = $1", [Number(projectId)]);
   if (!proj) return { ok: false, reason: "no_project" };
-  const dup = db
-    .prepare("SELECT id FROM applications WHERE project_id = ? AND developer_id = ?")
-    .get(Number(projectId), Number(developerId));
+  const dup = await db.get(
+    "SELECT id FROM applications WHERE project_id = $1 AND developer_id = $2",
+    [Number(projectId), Number(developerId)]
+  );
   if (dup) return { ok: false, reason: "already_applied" };
 
-  const result = db
-    .prepare(
-      "INSERT INTO applications (project_id, developer_id, preferred_role, interest_level, message) VALUES (?, ?, ?, ?, ?)"
-    )
-    .run(
+  const rows = await db.query(
+    "INSERT INTO applications (project_id, developer_id, preferred_role, interest_level, message) VALUES ($1,$2,$3,$4,$5) RETURNING id",
+    [
       Number(projectId),
       Number(developerId),
       d.preferred_role || "",
       INTEREST.includes(d.interest_level) ? d.interest_level : "medium",
-      d.message || ""
-    );
-  return { ok: true, application: getById(result.lastInsertRowid) };
+      d.message || "",
+    ]
+  );
+  return { ok: true, application: await getById(rows[0].id) };
 }
 
-function setStatus(id, status) {
+async function setStatus(id, status) {
   if (!STATUSES.includes(status)) return { ok: false, reason: "bad_status" };
-  const app = getById(id);
+  const app = await getById(id);
   if (!app) return { ok: false, reason: "not_found" };
-  db.prepare("UPDATE applications SET status = ? WHERE id = ?").run(status, Number(id));
-  return { ok: true, application: getById(id) };
+  await db.query("UPDATE applications SET status = $1 WHERE id = $2", [status, Number(id)]);
+  return { ok: true, application: await getById(id) };
 }
 
-function remove(id) {
-  return db.prepare("DELETE FROM applications WHERE id = ?").run(Number(id)).changes > 0;
+async function remove(id) {
+  const rows = await db.query("DELETE FROM applications WHERE id = $1 RETURNING id", [Number(id)]);
+  return rows.length > 0;
 }
 
 module.exports = { STATUSES, INTEREST, getById, listByProject, listByDeveloper, apply, setStatus, remove };

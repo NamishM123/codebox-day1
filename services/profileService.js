@@ -23,35 +23,30 @@ function shape(row) {
   };
 }
 
-function getByMemberId(memberId) {
-  const row = db
-    .prepare(
-      `SELECT dp.*, m.username, m.name, m.role
-       FROM developer_profiles dp JOIN members m ON m.id = dp.member_id
-       WHERE dp.member_id = ?`
-    )
-    .get(Number(memberId));
+async function getByMemberId(memberId) {
+  const row = await db.get(
+    `SELECT dp.*, m.username, m.name, m.role
+     FROM developer_profiles dp JOIN members m ON m.id = dp.member_id
+     WHERE dp.member_id = $1`,
+    [Number(memberId)]
+  );
   return shape(row);
 }
 
-// Create or update the member's profile. Array fields accept arrays or strings.
-function upsertProfile(memberId, data) {
+// Create or update the member's profile (Postgres UPSERT).
+async function upsertProfile(memberId, data) {
   const norm = (v) => (Array.isArray(v) ? v.join(", ") : v == null ? "" : String(v));
-  const existing = db
-    .prepare("SELECT id FROM developer_profiles WHERE member_id = ?")
-    .get(Number(memberId));
-
   const vals = FIELDS.map((f) => norm(data[f]));
+  const cols = FIELDS.join(", ");
+  const insertPlaceholders = FIELDS.map((_, i) => `$${i + 2}`).join(", ");
+  const updateSet = FIELDS.map((f, i) => `${f} = $${i + 2}`).join(", ");
 
-  if (existing) {
-    db.prepare(
-      `UPDATE developer_profiles SET ${FIELDS.map((f) => `${f} = ?`).join(", ")}, updated_at = datetime('now') WHERE member_id = ?`
-    ).run(...vals, Number(memberId));
-  } else {
-    db.prepare(
-      `INSERT INTO developer_profiles (member_id, ${FIELDS.join(", ")}) VALUES (?, ${FIELDS.map(() => "?").join(", ")})`
-    ).run(Number(memberId), ...vals);
-  }
+  await db.query(
+    `INSERT INTO developer_profiles (member_id, ${cols})
+     VALUES ($1, ${insertPlaceholders})
+     ON CONFLICT (member_id) DO UPDATE SET ${updateSet}, updated_at = now()`,
+    [Number(memberId), ...vals]
+  );
   return getByMemberId(memberId);
 }
 

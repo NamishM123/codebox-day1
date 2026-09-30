@@ -18,28 +18,27 @@ const BASE = `
   SELECT p.*,
          creator.username AS creator,
          lead.username     AS tech_lead,
-         (SELECT COUNT(*) FROM applications a WHERE a.project_id = p.id) AS interested
+         (SELECT COUNT(*)::int FROM applications a WHERE a.project_id = p.id) AS interested
   FROM projects p
   JOIN members creator ON creator.id = p.created_by
   LEFT JOIN members lead ON lead.id = p.tech_lead_id`;
 
-function getAll() {
-  return db.prepare(`${BASE} ORDER BY p.id DESC`).all().map(shape);
+async function getAll() {
+  const rows = await db.query(`${BASE} ORDER BY p.id DESC`);
+  return rows.map(shape);
 }
 
-function getById(id) {
-  return shape(db.prepare(`${BASE} WHERE p.id = ?`).get(Number(id)));
+async function getById(id) {
+  return shape(await db.get(`${BASE} WHERE p.id = $1`, [Number(id)]));
 }
 
-function create(createdBy, d) {
+async function create(createdBy, d) {
   const norm = (v) => (Array.isArray(v) ? v.join(", ") : v == null ? "" : String(v));
-  const result = db
-    .prepare(
-      `INSERT INTO projects
-        (created_by, tech_lead_id, title, description, category, tech_stack, needed_roles, difficulty, timeline, accent, image, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    )
-    .run(
+  const rows = await db.query(
+    `INSERT INTO projects
+      (created_by, tech_lead_id, title, description, category, tech_stack, needed_roles, difficulty, timeline, accent, image, status)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
+    [
       Number(createdBy),
       d.tech_lead_id ? Number(d.tech_lead_id) : null,
       d.title,
@@ -51,13 +50,14 @@ function create(createdBy, d) {
       d.timeline || "",
       d.accent || "#7b61ff",
       d.image || "",
-      STATUSES.includes(d.status) ? d.status : "open"
-    );
-  return getById(result.lastInsertRowid);
+      STATUSES.includes(d.status) ? d.status : "open",
+    ]
+  );
+  return getById(rows[0].id);
 }
 
-function update(id, d) {
-  const existing = getById(id);
+async function update(id, d) {
+  const existing = await getById(id);
   if (!existing) return undefined;
   const norm = (v, cur) =>
     v === undefined ? cur : Array.isArray(v) ? v.join(", ") : String(v);
@@ -77,17 +77,18 @@ function update(id, d) {
       d.tech_lead_id === undefined ? existing.tech_lead_id : d.tech_lead_id ? Number(d.tech_lead_id) : null,
   };
 
-  db.prepare(
-    `UPDATE projects SET title=?, description=?, category=?, tech_stack=?, needed_roles=?, difficulty=?, timeline=?, accent=?, image=?, status=?, tech_lead_id=? WHERE id=?`
-  ).run(
-    next.title, next.description, next.category, next.tech_stack, next.needed_roles,
-    next.difficulty, next.timeline, next.accent, next.image, next.status, next.tech_lead_id, Number(id)
+  await db.query(
+    `UPDATE projects SET title=$1, description=$2, category=$3, tech_stack=$4, needed_roles=$5,
+       difficulty=$6, timeline=$7, accent=$8, image=$9, status=$10, tech_lead_id=$11 WHERE id=$12`,
+    [next.title, next.description, next.category, next.tech_stack, next.needed_roles,
+     next.difficulty, next.timeline, next.accent, next.image, next.status, next.tech_lead_id, Number(id)]
   );
   return getById(id);
 }
 
-function remove(id) {
-  return db.prepare("DELETE FROM projects WHERE id = ?").run(Number(id)).changes > 0;
+async function remove(id) {
+  const rows = await db.query("DELETE FROM projects WHERE id = $1 RETURNING id", [Number(id)]);
+  return rows.length > 0;
 }
 
 module.exports = { STATUSES, getAll, getById, create, update, remove };

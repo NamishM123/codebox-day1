@@ -11,7 +11,7 @@ function tokenFor(user) {
 }
 
 // POST /api/auth/register -> everyone starts as a developer
-router.post("/register", (req, res) => {
+router.post("/register", async (req, res) => {
   const { username, name, password } = req.body || {};
   if (!username || typeof username !== "string" || username.trim().length < 3)
     return res.status(400).json({ error: "username must be at least 3 characters" });
@@ -19,28 +19,29 @@ router.post("/register", (req, res) => {
     return res.status(400).json({ error: "password must be at least 6 characters" });
 
   try {
-    const user = registerMember(username.trim(), (name || "").trim(), password);
+    const user = await registerMember(username.trim(), (name || "").trim(), password);
     res.status(201).json({ token: tokenFor(user), user });
   } catch (err) {
-    if (String(err.message).includes("UNIQUE"))
+    if (String(err.message).includes("duplicate") || String(err.message).includes("unique"))
       return res.status(409).json({ error: "username already taken" });
+    console.error("register error:", err);
     res.status(500).json({ error: "could not register" });
   }
 });
 
 // POST /api/auth/login
-router.post("/login", (req, res) => {
+router.post("/login", async (req, res) => {
   const { username, password } = req.body || {};
   if (!username || !password)
     return res.status(400).json({ error: "username and password are required" });
-  const user = authenticate(username, password);
+  const user = await authenticate(username, password);
   if (!user) return res.status(401).json({ error: "invalid username or password" });
   res.json({ token: tokenFor(user), user });
 });
 
 // GET /api/auth/me -> fresh user record (role may have changed since login)
-router.get("/me", requireAuth, (req, res) => {
-  const user = publicUser(getById(req.user.id));
+router.get("/me", requireAuth, async (req, res) => {
+  const user = publicUser(await getById(req.user.id));
   if (!user) return res.status(404).json({ error: "user not found" });
   res.json({ user, token: tokenFor(user) });
 });

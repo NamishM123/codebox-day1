@@ -7,7 +7,6 @@ const { requireAuth } = require("../middleware/auth");
 
 const router = express.Router();
 
-// A "manager" of a project can review its applicants.
 function managesProject(user, project) {
   return (
     user.role === "admin" ||
@@ -17,11 +16,11 @@ function managesProject(user, project) {
 }
 
 // POST /api/applications -> "I'm interested"
-router.post("/", requireAuth, (req, res) => {
+router.post("/", requireAuth, async (req, res) => {
   const { project_id } = req.body || {};
   if (!project_id) return res.status(400).json({ error: "project_id is required" });
 
-  const result = appSvc.apply(project_id, req.user.id, req.body);
+  const result = await appSvc.apply(project_id, req.user.id, req.body);
   if (result.ok) return res.status(201).json(result.application);
   const map = {
     no_project: [404, "project not found"],
@@ -32,41 +31,41 @@ router.post("/", requireAuth, (req, res) => {
 });
 
 // GET /api/applications/mine -> the developer's own applications
-router.get("/mine", requireAuth, (req, res) => {
-  res.json(appSvc.listByDeveloper(req.user.id));
+router.get("/mine", requireAuth, async (req, res) => {
+  res.json(await appSvc.listByDeveloper(req.user.id));
 });
 
 // GET /api/applications/project/:projectId -> applicants (project managers only)
-router.get("/project/:projectId", requireAuth, (req, res) => {
-  const project = projSvc.getById(req.params.projectId);
+router.get("/project/:projectId", requireAuth, async (req, res) => {
+  const project = await projSvc.getById(req.params.projectId);
   if (!project) return res.status(404).json({ error: "project not found" });
   if (!managesProject(req.user, project))
     return res.status(403).json({ error: "only the project's tech lead can view applicants" });
-  res.json(appSvc.listByProject(req.params.projectId));
+  res.json(await appSvc.listByProject(req.params.projectId));
 });
 
 // PUT /api/applications/:id/status -> accept/reject/waitlist (managers only)
-router.put("/:id/status", requireAuth, (req, res) => {
-  const app = appSvc.getById(req.params.id);
+router.put("/:id/status", requireAuth, async (req, res) => {
+  const app = await appSvc.getById(req.params.id);
   if (!app) return res.status(404).json({ error: "application not found" });
-  const project = projSvc.getById(app.project_id);
+  const project = await projSvc.getById(app.project_id);
   if (!managesProject(req.user, project))
     return res.status(403).json({ error: "only the project's tech lead can review applicants" });
 
-  const result = appSvc.setStatus(req.params.id, (req.body || {}).status);
+  const result = await appSvc.setStatus(req.params.id, (req.body || {}).status);
   if (result.ok) return res.json(result.application);
   res.status(400).json({ error: "invalid status" });
 });
 
 // DELETE /api/applications/:id -> withdraw (owner of the application or a manager)
-router.delete("/:id", requireAuth, (req, res) => {
-  const app = appSvc.getById(req.params.id);
+router.delete("/:id", requireAuth, async (req, res) => {
+  const app = await appSvc.getById(req.params.id);
   if (!app) return res.status(404).json({ error: "application not found" });
-  const project = projSvc.getById(app.project_id);
+  const project = await projSvc.getById(app.project_id);
   const isSelf = app.developer_id === req.user.id;
   if (!isSelf && !managesProject(req.user, project))
     return res.status(403).json({ error: "not allowed" });
-  appSvc.remove(req.params.id);
+  await appSvc.remove(req.params.id);
   res.status(204).end();
 });
 
