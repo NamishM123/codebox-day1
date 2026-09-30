@@ -17,10 +17,16 @@ const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTI
 let backend;
 if (useSupabase) {
   const { Pool } = require("pg");
+  // Serverless-friendly settings for the Supabase transaction pooler:
+  // one connection per instance, release it when idle, and fail fast
+  // instead of hanging until the platform kills the request.
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
-    max: 3,
+    max: 1,
+    idleTimeoutMillis: 10000,
+    connectionTimeoutMillis: 8000,
+    allowExitOnIdle: true,
   });
   backend = { query: (sql, params) => pool.query(sql, params) };
 } else {
@@ -136,7 +142,9 @@ async function seedIfEmpty() {
 }
 
 const ready = (async () => {
-  await initSchema();
+  // On Supabase the schema is created once via migration, so skip the DDL
+  // round-trips on every cold start. Locally (PGlite) we always ensure it.
+  if (!useSupabase) await initSchema();
   await seedIfEmpty();
 })();
 
