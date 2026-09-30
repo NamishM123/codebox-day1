@@ -22,7 +22,25 @@ const indexHtml = fs.readFileSync(
   "utf8"
 );
 
-app.use(express.json());
+// Robust JSON body parsing for Vercel serverless (express.json() can hang if
+// the platform has already touched the request stream). Uses an existing body
+// if present, else reads the stream with a timeout fallback so it never hangs.
+app.use((req, res, next) => {
+  if (req.method === "GET" || req.method === "HEAD") return next();
+  if (req.body && typeof req.body === "object") return next();
+  let data = "";
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    try { req.body = data ? JSON.parse(data) : {}; } catch { req.body = {}; }
+    next();
+  };
+  const timer = setTimeout(finish, 3000);
+  req.on("data", (c) => (data += c));
+  req.on("end", () => { clearTimeout(timer); finish(); });
+  req.on("error", () => { clearTimeout(timer); finish(); });
+});
 
 // Homepage: the CodeBox Match single-page app.
 app.get("/", (req, res) => res.type("html").send(indexHtml));
