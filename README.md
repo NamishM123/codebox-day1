@@ -79,8 +79,22 @@ cp .env.example .env      # then edit JWT_SECRET
 | POST   | `/api/posts`          | ✅   | **Create** a post      |
 | PUT    | `/api/posts/:id`      | ✅*  | **Update** a post      |
 | DELETE | `/api/posts/:id`      | ✅*  | **Delete** a post      |
+| GET    | `/api/teams`          | —    | **Read** all teams     |
+| GET    | `/api/teams/:id`      | —    | **Read** one team      |
+| POST   | `/api/teams`          | ✅   | **Create** a team      |
+| PUT    | `/api/teams/:id`      | ✅*  | **Update** a team      |
+| DELETE | `/api/teams/:id`      | ✅*  | **Delete** a team      |
+| POST   | `/api/teams/:id/join` | ✅   | Join a team            |
+| POST   | `/api/teams/:id/leave`| ✅   | Leave a team           |
 
 `*` owner-only (returns `403` otherwise).
+
+## Features
+
+- **Board** — announcements, events, and project posts (full CRUD, owner-scoped).
+- **Hackathon team finder** — create a team with a project idea, skills wanted,
+  and a size cap; members join (until full) or leave live. Owner-only edit/delete.
+- **Projects showcase** — an animated flip-card carousel of past projects.
 
 ## Deploy notes (Vercel)
 

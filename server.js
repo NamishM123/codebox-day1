@@ -11,6 +11,7 @@ const express = require("express");
 
 const authRouter = require("./routes/auth");
 const postsRouter = require("./routes/posts");
+const teamsRouter = require("./routes/teams");
 
 const app = express();
 
@@ -35,5 +36,6 @@ app.get("/health", (req, res) => {
 // API
 app.use("/api/auth", authRouter);
 app.use("/api/posts", postsRouter);
+app.use("/api/teams", teamsRouter);
 
 module.exports = app;

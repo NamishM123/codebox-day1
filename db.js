@@ -40,6 +40,27 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE
   );
+
+  CREATE TABLE IF NOT EXISTS teams (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    owner_id      INTEGER NOT NULL,
+    name          TEXT NOT NULL,
+    idea          TEXT NOT NULL,
+    skills_needed TEXT NOT NULL DEFAULT '',
+    max_size      INTEGER NOT NULL DEFAULT 4,
+    created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (owner_id) REFERENCES members(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS team_members (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    team_id   INTEGER NOT NULL,
+    member_id INTEGER NOT NULL,
+    joined_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE (team_id, member_id),
+    FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+    FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE
+  );
 `);
 
 module.exports = db;

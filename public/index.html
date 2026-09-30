@@ -170,6 +170,43 @@
         background: rgba(255,255,255,0.28); border: none;
       }
       .dots button.active { width: 22px; background: #ff5f00; }
+
+      /* ---- Team finder ---- */
+      .section-head { display:flex; align-items:baseline; justify-content:space-between; gap:0.5rem; margin-bottom:0.6rem; }
+      .section-head h2 { margin:0; font-size:1.1rem; }
+      .section-head .count { color:var(--muted); font-size:0.82rem; }
+      .team {
+        border:1px solid var(--line); border-radius:12px; padding:1rem;
+        margin-bottom:0.9rem; background:#101a2e;
+      }
+      .team-top { display:flex; align-items:flex-start; justify-content:space-between; gap:0.75rem; }
+      .team-top h3 { margin:0; font-size:1.05rem; }
+      .team-top .owner { color:var(--muted); font-size:0.78rem; }
+      .team .idea { margin:0.5rem 0 0.6rem; color:#cdd8ec; font-size:0.92rem; }
+      .team .need { margin-bottom:0.6rem; }
+      .team .need span {
+        display:inline-block; font-size:0.72rem; margin:0 0.35rem 0.35rem 0;
+        padding:0.15rem 0.5rem; border-radius:999px;
+        background:rgba(255,95,0,0.15); color:#ffb37a; border:1px solid rgba(255,95,0,0.3);
+      }
+      .roster { display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.6rem; }
+      .chip {
+        display:flex; align-items:center; gap:0.35rem; font-size:0.78rem;
+        background:#0c1526; border:1px solid var(--line); border-radius:999px; padding:0.2rem 0.6rem;
+      }
+      .chip .av {
+        height:18px; width:18px; border-radius:999px; display:grid; place-items:center;
+        font-size:0.62rem; font-weight:700; color:#04222e; background:var(--accent);
+      }
+      .team-foot { display:flex; align-items:center; justify-content:space-between; gap:0.6rem; flex-wrap:wrap; }
+      .spots { font-size:0.8rem; color:var(--muted); }
+      .spots.full { color:var(--danger); }
+      .team-actions { display:flex; gap:0.5rem; }
+      .team-actions button { padding:0.4rem 0.9rem; font-size:0.82rem; }
+      .btn-join { background:var(--accent); color:var(--accent-ink); }
+      .btn-leave { background:transparent; color:var(--muted); border:1px solid var(--line); }
+      .btn-danger { background:transparent; color:var(--danger); border:1px solid var(--danger); }
+      .btn-full { background:#2a3550; color:var(--muted); cursor:not-allowed; }
     </style>
   </head>
   <body>
@@ -247,6 +284,40 @@
         <div class="err" id="p-err"></div>
       </div>
 
+      <!-- TEAM FINDER -->
+      <section>
+        <div class="section-head">
+          <h2>Find a hackathon team</h2>
+          <span class="count" id="teams-count"></span>
+        </div>
+
+        <!-- Create team (auth only) -->
+        <div class="card hidden" id="team-compose">
+          <div class="field">
+            <label>Team name</label>
+            <input id="t-name" placeholder="e.g. Team Rocket" />
+          </div>
+          <div class="field">
+            <label>Project idea</label>
+            <textarea id="t-idea" placeholder="What are you building?"></textarea>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label>Skills you need (comma-separated)</label>
+              <input id="t-skills" placeholder="React, ML, Design" />
+            </div>
+            <div class="field">
+              <label>Max team size</label>
+              <input id="t-size" type="number" min="1" max="12" value="4" />
+            </div>
+          </div>
+          <button id="t-submit">Create team</button>
+          <div class="err" id="t-err"></div>
+        </div>
+
+        <div id="teams-list"><div class="empty">Loading teams…</div></div>
+      </section>
+
       <!-- BOARD -->
       <div class="card">
         <div id="board"><div class="empty">Loading board…</div></div>
@@ -296,6 +367,7 @@
           $("auth-username").value = ""; $("auth-password").value = "";
           render();
           loadBoard();
+          loadTeams();
         } catch (e) { $("auth-err").textContent = "Network error"; }
       };
 
@@ -304,6 +376,7 @@
         state.user = null;
         render();
         loadBoard();
+        loadTeams();
       }
 
       function render() {
@@ -312,10 +385,12 @@
           $("logout").onclick = logout;
           $("auth-card").classList.add("hidden");
           $("compose-card").classList.remove("hidden");
+          $("team-compose").classList.remove("hidden");
         } else {
           $("who").innerHTML = "";
           $("auth-card").classList.remove("hidden");
           $("compose-card").classList.add("hidden");
+          $("team-compose").classList.add("hidden");
         }
       }
 
@@ -393,6 +468,118 @@
           if (res.ok || res.status === 204) loadBoard();
         } catch (e) {}
       }
+
+      // ---- Team finder ----
+      function initials(name) {
+        return String(name).slice(0, 2).toUpperCase();
+      }
+
+      async function loadTeams() {
+        try {
+          const res = await api("/api/teams");
+          const teams = await res.json();
+          $("teams-count").textContent =
+            Array.isArray(teams) && teams.length
+              ? `${teams.length} team${teams.length === 1 ? "" : "s"} recruiting`
+              : "";
+          const list = $("teams-list");
+          if (!Array.isArray(teams) || teams.length === 0) {
+            list.innerHTML =
+              '<div class="empty">No teams yet. ' +
+              (state.user ? "Create one above!" : "Log in to start one!") +
+              "</div>";
+            return;
+          }
+          list.innerHTML = teams.map(renderTeam).join("");
+          list.querySelectorAll("[data-join]").forEach((b) => (b.onclick = () => teamAction(b.dataset.join, "join")));
+          list.querySelectorAll("[data-leave]").forEach((b) => (b.onclick = () => teamAction(b.dataset.leave, "leave")));
+          list.querySelectorAll("[data-tdel]").forEach((b) => (b.onclick = () => deleteTeam(b.dataset.tdel)));
+        } catch (e) {
+          $("teams-list").innerHTML = '<div class="empty">Could not load teams.</div>';
+        }
+      }
+
+      function renderTeam(t) {
+        const uid = state.user && state.user.id;
+        const isMember = uid && t.members.some((m) => m.id === uid);
+        const isOwner = uid && t.owner_id === uid;
+        const full = t.spots_left <= 0;
+
+        const roster = t.members
+          .map((m) => `<span class="chip"><span class="av">${esc(initials(m.username))}</span>${esc(m.username)}${m.id === t.owner_id ? " ⭐" : ""}</span>`)
+          .join("");
+        const needs = t.skills_needed.length
+          ? `<div class="need">${t.skills_needed.map((s) => `<span>${esc(s)}</span>`).join("")}</div>`
+          : "";
+
+        let action = "";
+        if (!state.user) {
+          action = `<span class="spots">Log in to join</span>`;
+        } else if (isOwner) {
+          action = `<button class="btn-danger" data-tdel="${t.id}">Delete team</button>`;
+        } else if (isMember) {
+          action = `<button class="btn-leave" data-leave="${t.id}">Leave</button>`;
+        } else if (full) {
+          action = `<button class="btn-full" disabled>Full</button>`;
+        } else {
+          action = `<button class="btn-join" data-join="${t.id}">Join team</button>`;
+        }
+
+        return `
+          <div class="team">
+            <div class="team-top">
+              <div>
+                <h3>${esc(t.name)}</h3>
+                <div class="owner">by ${esc(t.owner)} ⭐</div>
+              </div>
+              <div class="spots ${full ? "full" : ""}">${full ? "Full" : t.spots_left + " spot" + (t.spots_left === 1 ? "" : "s") + " left"}</div>
+            </div>
+            <p class="idea">${esc(t.idea)}</p>
+            ${needs}
+            <div class="roster">${roster}</div>
+            <div class="team-foot">
+              <span class="spots">${t.member_count}/${t.max_size} members</span>
+              <div class="team-actions">${action}</div>
+            </div>
+          </div>`;
+      }
+
+      async function teamAction(id, verb) {
+        try {
+          const res = await api(`/api/teams/${id}/${verb}`, { method: "POST" });
+          if (!res.ok) {
+            const d = await res.json().catch(() => ({}));
+            alert(d.error || `Could not ${verb}`);
+          }
+          loadTeams();
+        } catch (e) {}
+      }
+
+      async function deleteTeam(id) {
+        if (!confirm("Delete this team?")) return;
+        try {
+          const res = await api(`/api/teams/${id}`, { method: "DELETE" });
+          if (res.ok || res.status === 204) loadTeams();
+        } catch (e) {}
+      }
+
+      document.getElementById("t-submit").onclick = async () => {
+        $("t-err").textContent = "";
+        const name = $("t-name").value.trim();
+        const idea = $("t-idea").value.trim();
+        const skills = $("t-skills").value.split(",").map((s) => s.trim()).filter(Boolean);
+        const max_size = Number($("t-size").value) || 4;
+        try {
+          const res = await api("/api/teams", {
+            method: "POST",
+            body: JSON.stringify({ name, idea, skills_needed: skills, max_size }),
+          });
+          const d = await res.json().catch(() => ({}));
+          if (!res.ok) { $("t-err").textContent = d.error || "Could not create team"; return; }
+          $("t-name").value = ""; $("t-idea").value = ""; $("t-skills").value = ""; $("t-size").value = 4;
+          loadTeams();
+        } catch (e) { $("t-err").textContent = "Network error"; }
+      };
 
       // ---- Projects carousel (vanilla "dimensional switch") ----
       // Edit this list with your real CodeBox projects.
@@ -523,6 +710,7 @@
         setMode("login");
         render();
         loadBoard();
+        loadTeams();
       }
       boot();
     </script>
