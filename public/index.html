@@ -4,35 +4,46 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CodeBox Match</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <style>
       :root {
-        --bg: #06070c;
-        --panel: rgba(20, 24, 38, 0.72);
-        --panel-solid: #12162a;
-        --line: rgba(255, 255, 255, 0.09);
-        --line-strong: rgba(255, 255, 255, 0.18);
-        --text: #eef2fb;
-        --muted: #9aa6c4;
-        --accent: #7b61ff;
-        --accent-ink: #0a0620;
-        --danger: #ff6b7a;
-        --ok: #46e5a0;
-        --warn: #ffcf6b;
+        /* Tinted neutrals (never pure black/gray) + one restrained accent. */
+        --bg: #0b0d10;
+        --panel: rgba(24, 27, 32, 0.66);
+        --panel-solid: #16191e;
+        --line: rgba(238, 240, 245, 0.08);
+        --line-strong: rgba(238, 240, 245, 0.16);
+        --text: #f3f2ee;          /* warm off-white */
+        --muted: #9a9d94;         /* warm-tinted, not gray-on-color */
+        --accent: #e0a24a;        /* warm amber, used sparingly */
+        --accent-soft: rgba(224, 162, 74, 0.14);
+        --primary: #f3f2ee;       /* off-white primary buttons */
+        --primary-ink: #14140f;
+        --danger: #e8756b;
+        --ok: #6bd39a;
+        --warn: #e0a24a;
+        --display: "Space Grotesk", "IBM Plex Sans", sans-serif;
+        --sans: "IBM Plex Sans", system-ui, sans-serif;
+        --mono: "IBM Plex Mono", ui-monospace, monospace;
       }
       * { box-sizing: border-box; }
       html, body { margin: 0; }
       body {
-        font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        font-family: var(--sans);
         background:
-          radial-gradient(1100px 500px at 80% -10%, #1a1330 0%, transparent 55%),
-          radial-gradient(900px 500px at 0% 0%, #0b1c2e 0%, transparent 50%),
+          radial-gradient(1200px 600px at 82% -12%, #17181c 0%, transparent 58%),
+          radial-gradient(900px 500px at -5% 0%, #121417 0%, transparent 52%),
           var(--bg);
         color: var(--text);
         min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
       }
+      h1, h2, h3, .brand { font-family: var(--display); }
       a { color: inherit; }
       button { font-family: inherit; cursor: pointer; }
-      .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+      .mono { font-family: var(--mono); }
 
       /* ---------- Top bar ---------- */
       .topbar {
@@ -42,8 +53,8 @@
         background: rgba(6,7,12,0.7); backdrop-filter: blur(14px);
         border-bottom: 1px solid var(--line);
       }
-      .brand { display: flex; align-items: baseline; gap: 0.5rem; font-weight: 800; letter-spacing: -0.02em; font-size: 1.15rem; }
-      .brand b { color: var(--accent); }
+      .brand { display: flex; align-items: baseline; gap: 0.5rem; font-weight: 600; letter-spacing: -0.02em; font-size: 1.12rem; }
+      .brand b { color: var(--accent); font-weight: 700; }
       .brand .tag { font-size: 0.62rem; letter-spacing: 0.22em; color: var(--muted); font-weight: 600; }
       .nav { display: flex; gap: 0.25rem; align-items: center; flex-wrap: wrap; }
       .nav button {
@@ -52,20 +63,20 @@
         transition: all 0.15s ease;
       }
       .nav button:hover { color: var(--text); background: rgba(255,255,255,0.05); }
-      .nav button.active { color: var(--text); background: rgba(123,97,255,0.18); box-shadow: inset 0 0 0 1px rgba(123,97,255,0.4); }
+      .nav button.active { color: var(--text); background: rgba(243,242,238,0.07); box-shadow: inset 0 0 0 1px var(--line-strong); }
       .whoami { display: flex; align-items: center; gap: 0.6rem; font-size: 0.85rem; }
       .role-pill {
-        font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;
-        padding: 0.18rem 0.5rem; border-radius: 999px; background: rgba(123,97,255,0.2); color: #c9bcff;
+        font-family: var(--mono); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500;
+        padding: 0.2rem 0.5rem; border-radius: 6px; background: rgba(243,242,238,0.08); color: var(--muted);
       }
-      .role-pill.tech_lead { background: rgba(70,229,160,0.16); color: #8ff2c9; }
-      .role-pill.admin { background: rgba(255,207,107,0.16); color: var(--warn); }
+      .role-pill.tech_lead { background: rgba(107,211,154,0.14); color: var(--ok); }
+      .role-pill.admin { background: var(--accent-soft); color: var(--accent); }
 
       .btn {
-        border: none; border-radius: 10px; padding: 0.55rem 1rem; font-weight: 700; font-size: 0.86rem;
-        background: var(--accent); color: #fff; transition: transform 0.12s ease, filter 0.12s ease;
+        border: none; border-radius: 10px; padding: 0.58rem 1.05rem; font-weight: 600; font-size: 0.86rem;
+        background: var(--primary); color: var(--primary-ink); transition: transform 0.12s ease, opacity 0.12s ease;
       }
-      .btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+      .btn:hover { opacity: 0.88; transform: translateY(-1px); }
       .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line-strong); }
       .btn.sm { padding: 0.35rem 0.7rem; font-size: 0.78rem; }
       .btn.danger { background: transparent; color: var(--danger); border: 1px solid rgba(255,107,122,0.5); }
@@ -172,14 +183,14 @@
       .pcard .desc { color: #c7d0e6; font-size: 0.88rem; margin: 0.7rem 0 0.8rem; line-height: 1.45; }
       .badges { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.6rem; }
       .badge { font-size: 0.7rem; padding: 0.2rem 0.55rem; border-radius: 999px; background: rgba(255,255,255,0.07); border: 1px solid var(--line); color: #d7def0; }
-      .badge.role { background: rgba(123,97,255,0.14); border-color: rgba(123,97,255,0.3); color: #cabfff; }
+      .badge.role { background: var(--accent-soft); border-color: rgba(224,162,74,0.3); color: var(--accent); }
       .pill {
         font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700;
         padding: 0.22rem 0.55rem; border-radius: 999px;
       }
       .pill.open { background: rgba(70,229,160,0.16); color: var(--ok); }
       .pill.reviewing { background: rgba(255,207,107,0.16); color: var(--warn); }
-      .pill.team_formed { background: rgba(123,97,255,0.18); color: #c9bcff; }
+      .pill.team_formed { background: var(--accent-soft); color: var(--accent); }
       .pill.closed { background: rgba(255,107,122,0.14); color: var(--danger); }
       .pill.pending { background: rgba(255,207,107,0.16); color: var(--warn); }
       .pill.accepted { background: rgba(70,229,160,0.16); color: var(--ok); }
@@ -207,7 +218,7 @@
       .lead { text-align: center; max-width: 760px; margin: 0 auto 2.5rem; }
       .lead .eyebrow { font-size: 0.72rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
       .lead h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); line-height: 1.02; letter-spacing: -0.03em; margin: 0.6rem 0 0.7rem; }
-      .lead h1 .grad { background: linear-gradient(100deg, var(--accent), #ff5f8f 60%, var(--warn)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+      .lead h1 .grad { color: var(--accent); }
       .lead p { color: var(--muted); font-size: 1.05rem; line-height: 1.55; margin: 0 auto; max-width: 620px; }
       .cta-row { display: flex; gap: 0.7rem; justify-content: center; margin-top: 1.4rem; flex-wrap: wrap; }
       .btn.lg { padding: 0.8rem 1.4rem; font-size: 0.95rem; border-radius: 12px; }
@@ -220,7 +231,7 @@
       .section-title p { color: var(--muted); margin: 0.3rem 0 0; }
       .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.1rem; }
       .step { position: relative; padding: 1.4rem; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); backdrop-filter: blur(12px); }
-      .step .n { font-size: 0.8rem; font-weight: 800; color: var(--accent-ink); background: var(--accent); width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; margin-bottom: 0.7rem; }
+      .step .n { font-family: var(--mono); font-size: 1.5rem; font-weight: 500; color: var(--accent); margin-bottom: 0.6rem; opacity: 0.9; }
       .step h3 { margin: 0 0 0.35rem; font-size: 1.05rem; }
       .step p { margin: 0; color: var(--muted); font-size: 0.88rem; line-height: 1.45; }
       .roles-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.1rem; }
@@ -441,14 +452,24 @@
         $("a-err").textContent = "";
         const body = { username: $("a-user").value.trim(), password: $("a-pass").value };
         if (mode === "register") body.name = ($("a-name") ? $("a-name").value.trim() : "");
+        $("a-submit").textContent = "Working…"; $("a-submit").disabled = true;
         try {
           const res = await api("/api/auth/" + mode, { method: "POST", body: JSON.stringify(body) });
-          const d = await res.json();
-          if (!res.ok) { $("a-err").textContent = d.error || "Something went wrong"; return; }
+          let d = null;
+          try { d = await res.json(); } catch (_) {}
+          if (!res.ok || !d) {
+            $("a-err").textContent = (d && d.error) || `Server error (${res.status})${res.status === 504 ? " — the server timed out" : ""}`;
+            return;
+          }
           state.token = d.token; state.user = d.user;
           localStorage.setItem("cbm_token", d.token);
           closeModal(); renderWho(); renderNav(); loadProjects();
-        } catch (e) { $("a-err").textContent = "Network error"; }
+        } catch (e) {
+          $("a-err").textContent = "Could not reach the server (" + (e.message || "network") + ")";
+        } finally {
+          $("a-submit").disabled = false;
+          $("a-submit").textContent = mode === "login" ? "Log in" : "Create account";
+        }
       }
 
       // ---------- Modal helpers ----------
@@ -526,11 +547,12 @@
           </div>`;
       }
 
-      // Deterministic fallback image if a project has none (picsum = real photos).
-      const IMG_POOL = [1015,1016,1018,1019,1035,1039,1043,1044,1057,1069,1073,1084,180,201,239,326,371,435];
+      // Deterministic fallback image if a project has none. Tech/desk/architecture
+      // shots, grayscale so the accent color-grade reads as an intentional texture.
+      const IMG_POOL = [0,2,3,20,48,60,119,160,180,225,366,370,431,494,619,668];
       function imageFor(p) {
         const key = (p.id || 0) + (p.title ? p.title.length : 0);
-        return `https://picsum.photos/id/${IMG_POOL[key % IMG_POOL.length]}/1200/800`;
+        return `https://picsum.photos/id/${IMG_POOL[key % IMG_POOL.length]}/1200/800?grayscale`;
       }
 
       function openProjectForm(id) {
@@ -552,7 +574,7 @@
           <div class="field"><label>Cover image URL (optional &mdash; a nice one is auto-picked if blank)</label><input id="f-image" value="${esc(v("image"))}" placeholder="https://..." /></div>
           <div class="row2">
             <div class="field"><label>Timeline</label><input id="f-time" value="${esc(v("timeline"))}" placeholder="6 weeks" /></div>
-            <div class="field"><label>Accent color</label><input id="f-accent" type="color" value="${esc(v("accent","#7b61ff"))}" style="height:42px;padding:4px" /></div>
+            <div class="field"><label>Accent color</label><input id="f-accent" type="color" value="${esc(v("accent","#e0a24a"))}" style="height:42px;padding:4px" /></div>
           </div>
           ${p ? `<div class="field"><label>Status</label><select id="f-status">${["open","reviewing","team_formed","closed"].map((s)=>`<option value="${s}" ${p.status===s?"selected":""}>${s.replace("_"," ")}</option>`).join("")}</select></div>` : ""}
           <button class="btn" style="width:100%" id="f-submit">${p ? "Save changes" : "Submit idea"}</button>
@@ -566,7 +588,7 @@
             tech_stack: $("f-stack").value.split(",").map((s)=>s.trim()).filter(Boolean),
             needed_roles: $("f-roles").value.split(",").map((s)=>s.trim()).filter(Boolean),
             timeline: $("f-time").value.trim(), accent: $("f-accent").value,
-            image: $("f-image").value.trim() || `https://picsum.photos/id/${IMG_POOL[Math.floor(Math.random()*IMG_POOL.length)]}/1200/800`,
+            image: $("f-image").value.trim() || `https://picsum.photos/id/${IMG_POOL[Math.floor(Math.random()*IMG_POOL.length)]}/1200/800?grayscale`,
           };
           if (p) body.status = $("f-status").value;
           const res = await api(p ? "/api/projects/" + p.id : "/api/projects", { method: p ? "PUT" : "POST", body: JSON.stringify(body) });

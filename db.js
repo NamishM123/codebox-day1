@@ -24,6 +24,7 @@ if (useSupabase) {
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
     max: 1,
+    keepAlive: true,
     idleTimeoutMillis: 10000,
     connectionTimeoutMillis: 8000,
     allowExitOnIdle: true,
@@ -128,17 +129,17 @@ async function seedIfEmpty() {
     [devId, "CS sophomore who loves systems programming.", "C, Rust, Linux, Git", "intermediate", "10 hrs/week", "Backend, DevOps", "https://github.com/torvalds"]
   );
 
-  const img = (id) => `https://picsum.photos/id/${id}/1200/800`;
+  const img = (id) => `https://picsum.photos/id/${id}/1200/800?grayscale`;
   const proj = (by, lead, t, d, cat, stack, roles, diff, time, accent, image, status) =>
     rawQuery(
       `INSERT INTO projects (created_by, tech_lead_id, title, description, category, tech_stack, needed_roles, difficulty, timeline, accent, image, status)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
       [by, lead, t, d, cat, stack, roles, diff, time, accent, image, status]
     );
-  await proj(leadId, leadId, "Prismatic Rift", "A real-time collaborative shader playground for the club to build WebGL art together.", "Web", "React, WebGL, Node", "Frontend, Graphics", "advanced", "6 weeks", "#7b61ff", img(1069), "open");
-  await proj(leadId, leadId, "Ember Clouds", "Weather-driven generative art installation for the club showcase night.", "Creative", "Python, TouchDesigner", "Backend, Design", "intermediate", "4 weeks", "#ff4114", img(1039), "open");
-  await proj(adminId, null, "Neon Portal", "A campus events aggregator with a slick dark UI and push notifications.", "Mobile", "Flutter, Firebase", "Mobile, Backend", "intermediate", "8 weeks", "#00c8ff", img(1016), "reviewing");
-  await proj(devId, null, "Launch Window", "Track club rocketry telemetry live from a ground-station dashboard.", "Hardware", "Next.js, MQTT, Postgres", "Fullstack, Data", "advanced", "10 weeks", "#14307a", img(1018), "open");
+  await proj(leadId, leadId, "Prismatic Rift", "A real-time collaborative shader playground for the club to build WebGL art together.", "Web", "React, WebGL, Node", "Frontend, Graphics", "advanced", "6 weeks", "#e0a24a", img(180), "open");
+  await proj(leadId, leadId, "Ember Clouds", "Weather-driven generative art installation for the club showcase night.", "Creative", "Python, TouchDesigner", "Backend, Design", "intermediate", "4 weeks", "#e0553a", img(0), "open");
+  await proj(adminId, null, "Neon Portal", "A campus events aggregator with a slick dark UI and push notifications.", "Mobile", "Flutter, Firebase", "Mobile, Backend", "intermediate", "8 weeks", "#3fb6c9", img(20), "reviewing");
+  await proj(devId, null, "Launch Window", "Track club rocketry telemetry live from a ground-station dashboard.", "Hardware", "Next.js, MQTT, Postgres", "Fullstack, Data", "advanced", "10 weeks", "#4d7ef0", img(60), "open");
 }
 
 const ready = (async () => {
