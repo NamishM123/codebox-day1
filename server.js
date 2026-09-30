@@ -1,7 +1,7 @@
-// Express app for CodeBox Board — a coding-club members' board.
-// Auth lives in routes/auth.js, board CRUD in routes/posts.js, data logic in
-// services/, JWT in middleware/auth.js, and the SQLite DB in db.js.
-// This module exports the app; index.js starts the HTTP server.
+// Express app for CodeBox Match — a project-matching platform for a coding club.
+// Frontend (public/) shows the UI; routes/ expose the API; services/ hold
+// business logic; db.js is the SQLite layer; middleware/auth.js handles auth
+// and role protection. This module exports the app; index.js starts the server.
 
 require("dotenv").config();
 
@@ -10,12 +10,13 @@ const path = require("path");
 const express = require("express");
 
 const authRouter = require("./routes/auth");
-const postsRouter = require("./routes/posts");
-const teamsRouter = require("./routes/teams");
+const profilesRouter = require("./routes/profiles");
+const projectsRouter = require("./routes/projects");
+const applicationsRouter = require("./routes/applications");
+const adminRouter = require("./routes/admin");
 
 const app = express();
 
-// Load the single-page UI once at startup.
 const indexHtml = fs.readFileSync(
   path.join(__dirname, "public", "index.html"),
   "utf8"
@@ -23,19 +24,17 @@ const indexHtml = fs.readFileSync(
 
 app.use(express.json());
 
-// Homepage: the board UI (register/login + create/edit/delete posts).
-app.get("/", (req, res) => {
-  res.type("html").send(indexHtml);
-});
+// Homepage: the CodeBox Match single-page app.
+app.get("/", (req, res) => res.type("html").send(indexHtml));
 
 // Health check
-app.get("/health", (req, res) => {
-  res.json({ status: "ok" });
-});
+app.get("/health", (req, res) => res.json({ status: "ok" }));
 
 // API
 app.use("/api/auth", authRouter);
-app.use("/api/posts", postsRouter);
-app.use("/api/teams", teamsRouter);
+app.use("/api/profiles", profilesRouter);
+app.use("/api/projects", projectsRouter);
+app.use("/api/applications", applicationsRouter);
+app.use("/api/admin", adminRouter);
 
 module.exports = app;

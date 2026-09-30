@@ -3,714 +3,696 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>CodeBox Board</title>
+    <title>CodeBox Match</title>
     <style>
       :root {
-        --bg: #0b1120;
-        --card: #151f34;
-        --line: #26314d;
-        --text: #e6edf7;
-        --muted: #8ea1c0;
-        --accent: #4cc2ff;
-        --accent-ink: #052232;
-        --danger: #ff6b6b;
-        --evt: #ffd166;
-        --proj: #a78bfa;
-        --ann: #4cc2ff;
+        --bg: #06070c;
+        --panel: rgba(20, 24, 38, 0.72);
+        --panel-solid: #12162a;
+        --line: rgba(255, 255, 255, 0.09);
+        --line-strong: rgba(255, 255, 255, 0.18);
+        --text: #eef2fb;
+        --muted: #9aa6c4;
+        --accent: #7b61ff;
+        --accent-ink: #0a0620;
+        --danger: #ff6b7a;
+        --ok: #46e5a0;
+        --warn: #ffcf6b;
       }
       * { box-sizing: border-box; }
+      html, body { margin: 0; }
       body {
-        margin: 0;
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-        background: radial-gradient(1200px 600px at 70% -10%, #17223b 0%, var(--bg) 55%);
+        font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        background:
+          radial-gradient(1100px 500px at 80% -10%, #1a1330 0%, transparent 55%),
+          radial-gradient(900px 500px at 0% 0%, #0b1c2e 0%, transparent 50%),
+          var(--bg);
         color: var(--text);
         min-height: 100vh;
       }
-      .wrap { max-width: 760px; margin: 0 auto; padding: 2rem 1rem 4rem; }
-      header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-      .brand h1 { margin: 0; font-size: 1.7rem; letter-spacing: -0.02em; }
-      .brand h1 b { color: var(--accent); }
-      .brand p { margin: 0.25rem 0 0; color: var(--muted); font-size: 0.9rem; }
-      .who { display: flex; align-items: center; gap: 0.6rem; font-size: 0.9rem; color: var(--muted); }
-      .who b { color: var(--text); }
-      .card {
-        background: var(--card);
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 1.25rem;
-        margin-bottom: 1.25rem;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      a { color: inherit; }
+      button { font-family: inherit; cursor: pointer; }
+      .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+
+      /* ---------- Top bar ---------- */
+      .topbar {
+        position: sticky; top: 0; z-index: 40;
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 1rem; padding: 0.9rem 1.4rem;
+        background: rgba(6,7,12,0.7); backdrop-filter: blur(14px);
+        border-bottom: 1px solid var(--line);
       }
-      label { display: block; font-size: 0.8rem; color: var(--muted); margin: 0 0 0.3rem; }
+      .brand { display: flex; align-items: baseline; gap: 0.5rem; font-weight: 800; letter-spacing: -0.02em; font-size: 1.15rem; }
+      .brand b { color: var(--accent); }
+      .brand .tag { font-size: 0.62rem; letter-spacing: 0.22em; color: var(--muted); font-weight: 600; }
+      .nav { display: flex; gap: 0.25rem; align-items: center; flex-wrap: wrap; }
+      .nav button {
+        background: transparent; color: var(--muted); border: none;
+        padding: 0.45rem 0.8rem; border-radius: 9px; font-size: 0.85rem; font-weight: 600;
+        transition: all 0.15s ease;
+      }
+      .nav button:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+      .nav button.active { color: var(--text); background: rgba(123,97,255,0.18); box-shadow: inset 0 0 0 1px rgba(123,97,255,0.4); }
+      .whoami { display: flex; align-items: center; gap: 0.6rem; font-size: 0.85rem; }
+      .role-pill {
+        font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;
+        padding: 0.18rem 0.5rem; border-radius: 999px; background: rgba(123,97,255,0.2); color: #c9bcff;
+      }
+      .role-pill.tech_lead { background: rgba(70,229,160,0.16); color: #8ff2c9; }
+      .role-pill.admin { background: rgba(255,207,107,0.16); color: var(--warn); }
+
+      .btn {
+        border: none; border-radius: 10px; padding: 0.55rem 1rem; font-weight: 700; font-size: 0.86rem;
+        background: var(--accent); color: #fff; transition: transform 0.12s ease, filter 0.12s ease;
+      }
+      .btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+      .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line-strong); }
+      .btn.sm { padding: 0.35rem 0.7rem; font-size: 0.78rem; }
+      .btn.danger { background: transparent; color: var(--danger); border: 1px solid rgba(255,107,122,0.5); }
+      .btn.ok { background: var(--ok); color: #04120c; }
+      .btn.warn { background: var(--warn); color: #241a00; }
+
+      /* ---------- Hero carousel (MONTRA style, vanilla) ---------- */
+      .hero {
+        position: relative; height: 62vh; min-height: 420px; overflow: hidden;
+        background: #000; user-select: none;
+      }
+      .hero-bg {
+        position: absolute; inset: 0;
+        transition: background 0.8s ease;
+      }
+      .hero-bg::after {
+        content: ""; position: absolute; inset: 0;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.35), rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.55));
+      }
+      .hero-top {
+        position: absolute; top: 1.1rem; left: 0; right: 0; z-index: 3;
+        display: flex; align-items: center; justify-content: center; gap: 3.5rem;
+        font-size: 0.8rem; color: rgba(255,255,255,0.9);
+      }
+      .hero-top .wm { font-weight: 700; letter-spacing: 0.14em; }
+      .hero-top button { background: none; border: none; color: inherit; font-size: 0.8rem; opacity: 0.9; }
+      .hero-head {
+        position: absolute; left: 0; right: 0; top: 0; height: 50%;
+        display: flex; flex-direction: column; justify-content: flex-end;
+        padding: 0 5vw 1.4rem; z-index: 3;
+      }
+      .hero-title {
+        font-size: clamp(2rem, 6vw, 4.4rem); font-weight: 800; line-height: 0.9; letter-spacing: -0.03em;
+        color: #fff; text-shadow: 0 8px 40px rgba(0,0,0,0.4); margin: 0;
+        transition: opacity 0.4s ease, transform 0.5s ease;
+      }
+      .hero-sub { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.6rem 2rem; margin-top: 0.7rem; }
+      .hero-credit { font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255,255,255,0.82); }
+      .hero-meta { margin-left: auto; display: flex; gap: 1.6rem; }
+      .hero-meta span { font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255,255,255,0.82); }
+      .strip-wrap { position: absolute; left: 0; right: 0; top: 50%; height: 260px; z-index: 2; overflow: hidden; }
+      .strip { display: flex; align-items: flex-start; gap: 12px; transition: transform 0.55s cubic-bezier(0.22,1,0.36,1); will-change: transform; }
+      .hcard {
+        position: relative; flex: 0 0 auto; width: 150px; height: 130px; border-radius: 4px; overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.14); transition: height 0.5s cubic-bezier(0.22,1,0.36,1), box-shadow 0.4s;
+        display: flex; align-items: flex-end; padding: 8px; color: #fff;
+      }
+      .hcard.active { height: 250px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+      .hcard .ht { font-size: 0.7rem; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,0.6); opacity: 0; transition: opacity 0.3s; }
+      .hcard.active .ht { opacity: 1; }
+      .hcard .hstat { position: absolute; top: 6px; left: 8px; font-size: 0.56rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.85; }
+      .hero-rail { position: absolute; left: 5vw; bottom: 1.1rem; width: 200px; z-index: 3; }
+      .hero-rail .nums { display: flex; justify-content: space-between; font-size: 0.72rem; color: rgba(255,255,255,0.8); }
+      .hero-rail .track { position: relative; margin-top: 6px; height: 2px; background: rgba(255,255,255,0.25); }
+      .hero-rail .fill { position: absolute; top: 0; bottom: 0; background: #fff; transition: left 0.5s ease, width 0.5s ease; }
+
+      /* ---------- Layout ---------- */
+      .wrap { max-width: 1100px; margin: 0 auto; padding: 2rem 1.4rem 5rem; }
+      .view { display: none; }
+      .view.active { display: block; animation: fade 0.3s ease; }
+      @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+      .view-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.3rem; flex-wrap: wrap; }
+      .view-head h2 { margin: 0; font-size: 1.5rem; letter-spacing: -0.02em; }
+      .view-head p { margin: 0.2rem 0 0; color: var(--muted); font-size: 0.9rem; }
+
+      /* ---------- Project cards ---------- */
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.1rem; }
+      .pcard {
+        position: relative; border-radius: 16px; padding: 1.2rem;
+        background: var(--panel); backdrop-filter: blur(12px);
+        border: 1px solid var(--line); overflow: hidden;
+        transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+      }
+      .pcard::before {
+        content: ""; position: absolute; inset: 0 0 auto 0; height: 3px;
+        background: var(--pc-accent, var(--accent));
+      }
+      .pcard:hover { transform: translateY(-4px); border-color: var(--line-strong); box-shadow: 0 18px 50px rgba(0,0,0,0.35); }
+      .pcard .pc-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.6rem; }
+      .pcard h3 { margin: 0.2rem 0 0; font-size: 1.12rem; }
+      .pcard .by { font-size: 0.72rem; color: var(--muted); }
+      .pcard .desc { color: #c7d0e6; font-size: 0.88rem; margin: 0.7rem 0 0.8rem; line-height: 1.45; }
+      .badges { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.6rem; }
+      .badge { font-size: 0.7rem; padding: 0.2rem 0.55rem; border-radius: 999px; background: rgba(255,255,255,0.07); border: 1px solid var(--line); color: #d7def0; }
+      .badge.role { background: rgba(123,97,255,0.14); border-color: rgba(123,97,255,0.3); color: #cabfff; }
+      .pill {
+        font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700;
+        padding: 0.22rem 0.55rem; border-radius: 999px;
+      }
+      .pill.open { background: rgba(70,229,160,0.16); color: var(--ok); }
+      .pill.reviewing { background: rgba(255,207,107,0.16); color: var(--warn); }
+      .pill.team_formed { background: rgba(123,97,255,0.18); color: #c9bcff; }
+      .pill.closed { background: rgba(255,107,122,0.14); color: var(--danger); }
+      .pill.pending { background: rgba(255,207,107,0.16); color: var(--warn); }
+      .pill.accepted { background: rgba(70,229,160,0.16); color: var(--ok); }
+      .pill.rejected { background: rgba(255,107,122,0.14); color: var(--danger); }
+      .pill.waitlisted { background: rgba(154,166,196,0.16); color: var(--muted); }
+      .pc-foot { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 0.9rem; padding-top: 0.8rem; border-top: 1px solid var(--line); }
+      .pc-foot .meta { font-size: 0.76rem; color: var(--muted); }
+      .pc-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+      /* ---------- Panels / forms ---------- */
+      .panel { background: var(--panel); backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: 16px; padding: 1.3rem; }
+      .field { margin-bottom: 0.8rem; }
+      label { display: block; font-size: 0.76rem; color: var(--muted); margin-bottom: 0.3rem; letter-spacing: 0.02em; }
       input, textarea, select {
-        width: 100%;
-        padding: 0.6rem 0.7rem;
-        border-radius: 9px;
-        border: 1px solid var(--line);
-        background: #0c1526;
-        color: var(--text);
-        font-size: 0.95rem;
-        font-family: inherit;
+        width: 100%; padding: 0.6rem 0.75rem; border-radius: 10px;
+        background: rgba(0,0,0,0.3); border: 1px solid var(--line); color: var(--text); font-size: 0.9rem; font-family: inherit;
       }
-      textarea { resize: vertical; min-height: 70px; }
-      .row { display: flex; gap: 0.7rem; flex-wrap: wrap; }
-      .row > div { flex: 1 1 160px; }
-      .field { margin-bottom: 0.7rem; }
-      button {
-        padding: 0.6rem 1.1rem;
-        border-radius: 9px;
-        border: none;
-        background: var(--accent);
-        color: var(--accent-ink);
-        font-weight: 700;
-        cursor: pointer;
-        font-size: 0.92rem;
-      }
-      button:hover { filter: brightness(1.08); }
-      button.ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
-      button.link { background: none; color: var(--muted); padding: 0; font-weight: 500; text-decoration: underline; }
-      .tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
-      .tabs button { background: transparent; color: var(--muted); border: 1px solid var(--line); }
-      .tabs button.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-      .post { border-bottom: 1px solid var(--line); padding: 1rem 0; }
-      .post:last-child { border-bottom: none; }
-      .post-head { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
-      .post h3 { margin: 0; font-size: 1.08rem; }
-      .badge { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.15rem 0.5rem; border-radius: 999px; font-weight: 700; }
-      .badge.announcement { background: rgba(76,194,255,0.15); color: var(--ann); }
-      .badge.event { background: rgba(255,209,102,0.15); color: var(--evt); }
-      .badge.project { background: rgba(167,139,250,0.18); color: var(--proj); }
-      .post p { margin: 0.5rem 0 0.4rem; color: #cdd8ec; white-space: pre-wrap; }
-      .meta { color: var(--muted); font-size: 0.78rem; }
-      .actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
-      .actions button { padding: 0.3rem 0.65rem; font-size: 0.78rem; }
-      .del { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
-      .del:hover { background: var(--danger); color: #2a0a0a; filter: none; }
-      .err { color: var(--danger); font-size: 0.85rem; min-height: 1.1em; margin-top: 0.4rem; }
-      .empty { color: var(--muted); padding: 1rem 0; }
-      .hidden { display: none !important; }
-      footer { text-align: center; color: var(--muted); font-size: 0.78rem; margin-top: 1.5rem; }
-      code { background: #0c1526; padding: 0.1rem 0.35rem; border-radius: 4px; }
+      input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); }
+      textarea { resize: vertical; min-height: 72px; }
+      .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+      .err { color: var(--danger); font-size: 0.82rem; min-height: 1.1em; margin-top: 0.4rem; }
+      .empty { color: var(--muted); text-align: center; padding: 2.5rem 1rem; border: 1px dashed var(--line); border-radius: 14px; }
+      .empty .big { font-size: 1.5rem; margin-bottom: 0.3rem; }
 
-      /* ---- Projects carousel (dimensional flip) ---- */
-      .showcase { margin-bottom: 1.5rem; }
-      .showcase h2 { margin: 0 0 0.15rem; font-size: 1.1rem; }
-      .showcase .sub2 { margin: 0 0 1rem; color: var(--muted); font-size: 0.85rem; }
-      .stage {
-        position: relative;
-        width: 100%;
-        aspect-ratio: 16 / 10;
-        max-height: 420px;
-        perspective: 1400px;
-        border-radius: 16px;
-      }
-      .flipper {
-        position: absolute;
-        inset: 0;
-        transform-style: preserve-3d;
-        transition: transform 0.75s cubic-bezier(0.76, 0, 0.24, 1);
-        border-radius: 16px;
-      }
-      .face {
-        position: absolute;
-        inset: 0;
-        backface-visibility: hidden;
-        -webkit-backface-visibility: hidden;
-        border-radius: 16px;
-        overflow: hidden;
-        display: flex;
-        align-items: flex-end;
-        padding: 1.5rem;
-        color: #fff;
-      }
-      .face.back { transform: rotateY(180deg); }
-      .face .ftag {
-        position: absolute; top: 1rem; left: 1.25rem;
-        font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase;
-        background: rgba(0,0,0,0.28); padding: 0.25rem 0.6rem; border-radius: 999px;
-        backdrop-filter: blur(6px);
-      }
-      .face .fyear {
-        position: absolute; top: 1rem; right: 1.25rem;
-        font-size: 0.75rem; font-weight: 700; opacity: 0.9;
-      }
-      .face .fbody { max-width: 90%; }
-      .face .fbody h3 { margin: 0 0 0.35rem; font-size: 1.35rem; }
-      .face .fbody p { margin: 0 0 0.6rem; font-size: 0.9rem; opacity: 0.92; }
-      .face .fbody .tags span {
-        display: inline-block; font-size: 0.72rem; margin: 0 0.35rem 0.35rem 0;
-        padding: 0.15rem 0.5rem; border-radius: 999px;
-        background: rgba(255,255,255,0.18);
-      }
-      .stage-title {
-        position: absolute; inset: 0; z-index: 5; pointer-events: none;
-        display: flex; align-items: center; justify-content: center;
-        perspective: 1000px;
-      }
-      .stage-title .big {
-        position: absolute; text-align: center; font-weight: 800;
-        font-size: clamp(1.6rem, 6vw, 3.2rem); color: #fff;
-        text-shadow: 0 6px 30px rgba(0,0,0,0.45);
-        transition: transform 0.6s cubic-bezier(0.76,0,0.24,1), opacity 0.5s;
-        will-change: transform, opacity;
-      }
-      .carousel-ctrl {
-        display: flex; align-items: center; justify-content: center;
-        gap: 0.6rem; margin-top: 0.9rem;
-      }
-      .carousel-ctrl button {
-        height: 42px; width: 42px; border-radius: 999px; padding: 0;
-        background: transparent; color: var(--text);
-        border: 1px solid var(--line); font-size: 1.1rem; line-height: 1;
-      }
-      .carousel-ctrl button:hover { background: #ff5f00; color: #fff; border-color: #ff5f00; }
-      .dots { display: flex; gap: 0.4rem; align-items: center; }
-      .dots button {
-        height: 8px; width: 8px; border-radius: 999px; padding: 0;
-        background: rgba(255,255,255,0.28); border: none;
-      }
-      .dots button.active { width: 22px; background: #ff5f00; }
+      /* ---------- Table (admin) ---------- */
+      table { width: 100%; border-collapse: collapse; }
+      th, td { text-align: left; padding: 0.7rem 0.6rem; border-bottom: 1px solid var(--line); font-size: 0.88rem; }
+      th { color: var(--muted); font-weight: 600; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.06em; }
 
-      /* ---- Team finder ---- */
-      .section-head { display:flex; align-items:baseline; justify-content:space-between; gap:0.5rem; margin-bottom:0.6rem; }
-      .section-head h2 { margin:0; font-size:1.1rem; }
-      .section-head .count { color:var(--muted); font-size:0.82rem; }
-      .team {
-        border:1px solid var(--line); border-radius:12px; padding:1rem;
-        margin-bottom:0.9rem; background:#101a2e;
-      }
-      .team-top { display:flex; align-items:flex-start; justify-content:space-between; gap:0.75rem; }
-      .team-top h3 { margin:0; font-size:1.05rem; }
-      .team-top .owner { color:var(--muted); font-size:0.78rem; }
-      .team .idea { margin:0.5rem 0 0.6rem; color:#cdd8ec; font-size:0.92rem; }
-      .team .need { margin-bottom:0.6rem; }
-      .team .need span {
-        display:inline-block; font-size:0.72rem; margin:0 0.35rem 0.35rem 0;
-        padding:0.15rem 0.5rem; border-radius:999px;
-        background:rgba(255,95,0,0.15); color:#ffb37a; border:1px solid rgba(255,95,0,0.3);
-      }
-      .roster { display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.6rem; }
-      .chip {
-        display:flex; align-items:center; gap:0.35rem; font-size:0.78rem;
-        background:#0c1526; border:1px solid var(--line); border-radius:999px; padding:0.2rem 0.6rem;
-      }
-      .chip .av {
-        height:18px; width:18px; border-radius:999px; display:grid; place-items:center;
-        font-size:0.62rem; font-weight:700; color:#04222e; background:var(--accent);
-      }
-      .team-foot { display:flex; align-items:center; justify-content:space-between; gap:0.6rem; flex-wrap:wrap; }
-      .spots { font-size:0.8rem; color:var(--muted); }
-      .spots.full { color:var(--danger); }
-      .team-actions { display:flex; gap:0.5rem; }
-      .team-actions button { padding:0.4rem 0.9rem; font-size:0.82rem; }
-      .btn-join { background:var(--accent); color:var(--accent-ink); }
-      .btn-leave { background:transparent; color:var(--muted); border:1px solid var(--line); }
-      .btn-danger { background:transparent; color:var(--danger); border:1px solid var(--danger); }
-      .btn-full { background:#2a3550; color:var(--muted); cursor:not-allowed; }
+      /* ---------- Modal ---------- */
+      .modal-bg { position: fixed; inset: 0; z-index: 80; background: rgba(3,4,10,0.72); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; padding: 1rem; }
+      .modal-bg.show { display: flex; }
+      .modal { width: 100%; max-width: 520px; max-height: 90vh; overflow: auto; background: var(--panel-solid); border: 1px solid var(--line-strong); border-radius: 18px; padding: 1.5rem; }
+      .modal h3 { margin: 0 0 1rem; }
+      .modal .x { float: right; background: none; border: none; color: var(--muted); font-size: 1.3rem; line-height: 1; }
+      .applicant { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.7rem 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+      .applicant:last-child { border-bottom: none; }
+      .applicant .ai { font-weight: 600; }
+      .applicant .msg { color: var(--muted); font-size: 0.82rem; }
+      @media (max-width: 560px) { .row2 { grid-template-columns: 1fr; } .hero-meta { display: none; } }
     </style>
   </head>
   <body>
-    <div class="wrap">
-      <header>
-        <div class="brand">
-          <h1><b>Code</b>Box Board</h1>
-          <p>The coding club's board · announcements, events &amp; projects</p>
-        </div>
-        <div class="who" id="who"></div>
-      </header>
-
-      <!-- PROJECTS SHOWCASE (dimensional flip carousel) -->
-      <section class="showcase">
-        <h2>Last year's projects</h2>
-        <p class="sub2">What the club shipped &mdash; flip through the highlights</p>
-        <div class="stage" id="stage" aria-roledescription="carousel">
-          <div class="flipper" id="flipper">
-            <div class="face front" id="face-front"></div>
-            <div class="face back" id="face-back"></div>
-          </div>
-          <div class="stage-title" aria-hidden="true">
-            <div class="big" id="title-a"></div>
-            <div class="big" id="title-b" style="opacity:0"></div>
-          </div>
-        </div>
-        <div class="carousel-ctrl">
-          <button id="prev" aria-label="Previous project">&larr;</button>
-          <div class="dots" id="dots"></div>
-          <button id="next" aria-label="Next project">&rarr;</button>
-        </div>
-      </section>
-
-      <!-- AUTH -->
-      <div class="card" id="auth-card">
-        <div class="tabs">
-          <button id="tab-login" class="active">Log in</button>
-          <button id="tab-register">Register</button>
-        </div>
-        <div class="field">
-          <label>Username</label>
-          <input id="auth-username" placeholder="e.g. ada_l" autocomplete="username" />
-        </div>
-        <div class="field">
-          <label>Password</label>
-          <input id="auth-password" type="password" placeholder="6+ characters" autocomplete="current-password" />
-        </div>
-        <button id="auth-submit">Log in</button>
-        <div class="err" id="auth-err"></div>
-      </div>
-
-      <!-- NEW POST (auth only) -->
-      <div class="card hidden" id="compose-card">
-        <div class="field">
-          <label>Title</label>
-          <input id="p-title" placeholder="What's happening?" />
-        </div>
-        <div class="field">
-          <label>Details</label>
-          <textarea id="p-body" placeholder="Add the details…"></textarea>
-        </div>
-        <div class="row">
-          <div class="field">
-            <label>Category</label>
-            <select id="p-category">
-              <option value="announcement">Announcement</option>
-              <option value="event">Event</option>
-              <option value="project">Project</option>
-            </select>
-          </div>
-          <div class="field" style="display:flex; align-items:flex-end;">
-            <button id="p-submit" style="width:100%;">Post to board</button>
-          </div>
-        </div>
-        <div class="err" id="p-err"></div>
-      </div>
-
-      <!-- TEAM FINDER -->
-      <section>
-        <div class="section-head">
-          <h2>Find a hackathon team</h2>
-          <span class="count" id="teams-count"></span>
-        </div>
-
-        <!-- Create team (auth only) -->
-        <div class="card hidden" id="team-compose">
-          <div class="field">
-            <label>Team name</label>
-            <input id="t-name" placeholder="e.g. Team Rocket" />
-          </div>
-          <div class="field">
-            <label>Project idea</label>
-            <textarea id="t-idea" placeholder="What are you building?"></textarea>
-          </div>
-          <div class="row">
-            <div class="field">
-              <label>Skills you need (comma-separated)</label>
-              <input id="t-skills" placeholder="React, ML, Design" />
-            </div>
-            <div class="field">
-              <label>Max team size</label>
-              <input id="t-size" type="number" min="1" max="12" value="4" />
-            </div>
-          </div>
-          <button id="t-submit">Create team</button>
-          <div class="err" id="t-err"></div>
-        </div>
-
-        <div id="teams-list"><div class="empty">Loading teams…</div></div>
-      </section>
-
-      <!-- BOARD -->
-      <div class="card">
-        <div id="board"><div class="empty">Loading board…</div></div>
-      </div>
-
-      <footer>
-        Auth via JWT · data in SQLite · <code>GET /api/posts</code> is public, writes require login
-      </footer>
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <div class="brand"><span><b>Code</b>Box <span style="opacity:.6">Match</span></span></div>
+      <div class="nav" id="nav"></div>
+      <div class="whoami" id="whoami"></div>
     </div>
 
+    <!-- HERO CAROUSEL -->
+    <div class="hero" id="hero">
+      <div class="hero-bg" id="hero-bg"></div>
+      <div class="hero-top">
+        <button onclick="window.scrollTo({top:0,behavior:'smooth'})">&#8598; Top</button>
+        <span class="wm">CODEBOX MATCH</span>
+        <button onclick="go('projects')">Browse &#9776;</button>
+      </div>
+      <div class="hero-head">
+        <h1 class="hero-title" id="hero-title">CodeBox Match</h1>
+        <div class="hero-sub">
+          <span class="hero-credit" id="hero-credit"></span>
+          <div class="hero-meta" id="hero-meta"></div>
+        </div>
+      </div>
+      <div class="strip-wrap"><div class="strip" id="strip"></div></div>
+      <div class="hero-rail">
+        <div class="nums"><span id="rail-i">01</span><span id="rail-n">01</span></div>
+        <div class="track"><div class="fill" id="rail-fill" style="left:0;width:100%"></div></div>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <!-- PROJECTS -->
+      <section class="view active" id="view-projects">
+        <div class="view-head">
+          <div><h2>Project ideas</h2><p>Browse what the club is building &mdash; jump in on anything open.</p></div>
+          <button class="btn" id="new-project-btn">+ Submit idea</button>
+        </div>
+        <div class="grid" id="projects-grid"></div>
+      </section>
+
+      <!-- PROFILE -->
+      <section class="view" id="view-profile">
+        <div class="view-head"><div><h2>My developer profile</h2><p>Tech leads see this when reviewing your applications.</p></div></div>
+        <div class="panel" id="profile-panel"></div>
+      </section>
+
+      <!-- MY APPLICATIONS -->
+      <section class="view" id="view-apps">
+        <div class="view-head"><div><h2>My applications</h2><p>Projects you've expressed interest in.</p></div></div>
+        <div id="apps-list"></div>
+      </section>
+
+      <!-- TECH LEAD -->
+      <section class="view" id="view-lead">
+        <div class="view-head"><div><h2>Tech lead dashboard</h2><p>Review applicants and build your teams.</p></div></div>
+        <div id="lead-list"></div>
+      </section>
+
+      <!-- ADMIN -->
+      <section class="view" id="view-admin">
+        <div class="view-head"><div><h2>Admin dashboard</h2><p>Manage members and promote tech leads.</p></div></div>
+        <div class="panel" id="admin-panel"></div>
+      </section>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal-bg" id="modal-bg"><div class="modal" id="modal"></div></div>
+
     <script>
+      const state = { user: null, token: null, projects: [], view: "projects", hero: 0, heroTimer: null };
+      const $ = (id) => document.getElementById(id);
+      const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
       const api = (p, opts = {}) => {
         const headers = { "Content-Type": "application/json", ...(opts.headers || {}) };
-        const token = localStorage.getItem("cb_token");
-        if (token) headers.Authorization = "Bearer " + token;
+        if (state.token) headers.Authorization = "Bearer " + state.token;
         return fetch(p, { ...opts, headers });
       };
-      const $ = (id) => document.getElementById(id);
-      const state = { user: null, mode: "login", editing: null };
+      const isManager = (p) => state.user && (state.user.role === "admin" || p.created_by === state.user.id || p.tech_lead_id === state.user.id);
 
-      function esc(s) {
-        return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-      }
-
-      // ---- Auth UI ----
-      function setMode(mode) {
-        state.mode = mode;
-        $("tab-login").classList.toggle("active", mode === "login");
-        $("tab-register").classList.toggle("active", mode === "register");
-        $("auth-submit").textContent = mode === "login" ? "Log in" : "Create account";
-        $("auth-err").textContent = "";
-      }
-      $("tab-login").onclick = () => setMode("login");
-      $("tab-register").onclick = () => setMode("register");
-
-      $("auth-submit").onclick = async () => {
-        $("auth-err").textContent = "";
-        const username = $("auth-username").value.trim();
-        const password = $("auth-password").value;
-        const path = state.mode === "login" ? "/api/auth/login" : "/api/auth/register";
-        try {
-          const res = await api(path, { method: "POST", body: JSON.stringify({ username, password }) });
-          const data = await res.json();
-          if (!res.ok) { $("auth-err").textContent = data.error || "Something went wrong"; return; }
-          localStorage.setItem("cb_token", data.token);
-          state.user = data.user;
-          $("auth-username").value = ""; $("auth-password").value = "";
-          render();
-          loadBoard();
-          loadTeams();
-        } catch (e) { $("auth-err").textContent = "Network error"; }
-      };
-
-      function logout() {
-        localStorage.removeItem("cb_token");
-        state.user = null;
-        render();
-        loadBoard();
-        loadTeams();
-      }
-
-      function render() {
-        if (state.user) {
-          $("who").innerHTML = `Signed in as <b>${esc(state.user.username)}</b> &nbsp;<button class="link" id="logout">Log out</button>`;
-          $("logout").onclick = logout;
-          $("auth-card").classList.add("hidden");
-          $("compose-card").classList.remove("hidden");
-          $("team-compose").classList.remove("hidden");
-        } else {
-          $("who").innerHTML = "";
-          $("auth-card").classList.remove("hidden");
-          $("compose-card").classList.add("hidden");
-          $("team-compose").classList.add("hidden");
-        }
-      }
-
-      // ---- Board / CRUD ----
-      async function loadBoard() {
-        try {
-          const res = await api("/api/posts");
-          const posts = await res.json();
-          const board = $("board");
-          if (!Array.isArray(posts) || posts.length === 0) {
-            board.innerHTML = '<div class="empty">No posts yet. Be the first to post!</div>';
-            return;
-          }
-          board.innerHTML = posts.map(renderPost).join("");
-          board.querySelectorAll("[data-del]").forEach((b) => (b.onclick = () => del(b.dataset.del)));
-          board.querySelectorAll("[data-edit]").forEach((b) => (b.onclick = () => startEdit(b.dataset.edit, posts)));
-        } catch (e) {
-          $("board").innerHTML = '<div class="empty">Could not load the board.</div>';
-        }
-      }
-
-      function renderPost(p) {
-        const mine = state.user && state.user.id === p.member_id;
-        const actions = mine
-          ? `<div class="actions">
-               <button class="ghost" data-edit="${p.id}">Edit</button>
-               <button class="del" data-del="${p.id}">Delete</button>
-             </div>`
-          : "";
-        return `
-          <div class="post">
-            <div class="post-head">
-              <h3>${esc(p.title)}</h3>
-              <span class="badge ${esc(p.category)}">${esc(p.category)}</span>
-            </div>
-            <p>${esc(p.body)}</p>
-            <div class="meta">by ${esc(p.author)} · ${esc(p.created_at)} UTC</div>
-            ${actions}
-          </div>`;
-      }
-
-      $("p-submit").onclick = async () => {
-        $("p-err").textContent = "";
-        const title = $("p-title").value.trim();
-        const body = $("p-body").value.trim();
-        const category = $("p-category").value;
-        const editing = state.editing;
-        const path = editing ? "/api/posts/" + editing : "/api/posts";
-        const method = editing ? "PUT" : "POST";
-        try {
-          const res = await api(path, { method, body: JSON.stringify({ title, body, category }) });
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok) { $("p-err").textContent = data.error || "Could not save"; return; }
-          $("p-title").value = ""; $("p-body").value = ""; $("p-category").value = "announcement";
-          state.editing = null; $("p-submit").textContent = "Post to board";
-          loadBoard();
-        } catch (e) { $("p-err").textContent = "Network error"; }
-      };
-
-      function startEdit(id, posts) {
-        const p = posts.find((x) => String(x.id) === String(id));
-        if (!p) return;
-        state.editing = id;
-        $("p-title").value = p.title;
-        $("p-body").value = p.body;
-        $("p-category").value = p.category;
-        $("p-submit").textContent = "Save changes";
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-
-      async function del(id) {
-        if (!confirm("Delete this post?")) return;
-        try {
-          const res = await api("/api/posts/" + id, { method: "DELETE" });
-          if (res.ok || res.status === 204) loadBoard();
-        } catch (e) {}
-      }
-
-      // ---- Team finder ----
-      function initials(name) {
-        return String(name).slice(0, 2).toUpperCase();
-      }
-
-      async function loadTeams() {
-        try {
-          const res = await api("/api/teams");
-          const teams = await res.json();
-          $("teams-count").textContent =
-            Array.isArray(teams) && teams.length
-              ? `${teams.length} team${teams.length === 1 ? "" : "s"} recruiting`
-              : "";
-          const list = $("teams-list");
-          if (!Array.isArray(teams) || teams.length === 0) {
-            list.innerHTML =
-              '<div class="empty">No teams yet. ' +
-              (state.user ? "Create one above!" : "Log in to start one!") +
-              "</div>";
-            return;
-          }
-          list.innerHTML = teams.map(renderTeam).join("");
-          list.querySelectorAll("[data-join]").forEach((b) => (b.onclick = () => teamAction(b.dataset.join, "join")));
-          list.querySelectorAll("[data-leave]").forEach((b) => (b.onclick = () => teamAction(b.dataset.leave, "leave")));
-          list.querySelectorAll("[data-tdel]").forEach((b) => (b.onclick = () => deleteTeam(b.dataset.tdel)));
-        } catch (e) {
-          $("teams-list").innerHTML = '<div class="empty">Could not load teams.</div>';
-        }
-      }
-
-      function renderTeam(t) {
-        const uid = state.user && state.user.id;
-        const isMember = uid && t.members.some((m) => m.id === uid);
-        const isOwner = uid && t.owner_id === uid;
-        const full = t.spots_left <= 0;
-
-        const roster = t.members
-          .map((m) => `<span class="chip"><span class="av">${esc(initials(m.username))}</span>${esc(m.username)}${m.id === t.owner_id ? " ⭐" : ""}</span>`)
-          .join("");
-        const needs = t.skills_needed.length
-          ? `<div class="need">${t.skills_needed.map((s) => `<span>${esc(s)}</span>`).join("")}</div>`
-          : "";
-
-        let action = "";
-        if (!state.user) {
-          action = `<span class="spots">Log in to join</span>`;
-        } else if (isOwner) {
-          action = `<button class="btn-danger" data-tdel="${t.id}">Delete team</button>`;
-        } else if (isMember) {
-          action = `<button class="btn-leave" data-leave="${t.id}">Leave</button>`;
-        } else if (full) {
-          action = `<button class="btn-full" disabled>Full</button>`;
-        } else {
-          action = `<button class="btn-join" data-join="${t.id}">Join team</button>`;
-        }
-
-        return `
-          <div class="team">
-            <div class="team-top">
-              <div>
-                <h3>${esc(t.name)}</h3>
-                <div class="owner">by ${esc(t.owner)} ⭐</div>
-              </div>
-              <div class="spots ${full ? "full" : ""}">${full ? "Full" : t.spots_left + " spot" + (t.spots_left === 1 ? "" : "s") + " left"}</div>
-            </div>
-            <p class="idea">${esc(t.idea)}</p>
-            ${needs}
-            <div class="roster">${roster}</div>
-            <div class="team-foot">
-              <span class="spots">${t.member_count}/${t.max_size} members</span>
-              <div class="team-actions">${action}</div>
-            </div>
-          </div>`;
-      }
-
-      async function teamAction(id, verb) {
-        try {
-          const res = await api(`/api/teams/${id}/${verb}`, { method: "POST" });
-          if (!res.ok) {
-            const d = await res.json().catch(() => ({}));
-            alert(d.error || `Could not ${verb}`);
-          }
-          loadTeams();
-        } catch (e) {}
-      }
-
-      async function deleteTeam(id) {
-        if (!confirm("Delete this team?")) return;
-        try {
-          const res = await api(`/api/teams/${id}`, { method: "DELETE" });
-          if (res.ok || res.status === 204) loadTeams();
-        } catch (e) {}
-      }
-
-      document.getElementById("t-submit").onclick = async () => {
-        $("t-err").textContent = "";
-        const name = $("t-name").value.trim();
-        const idea = $("t-idea").value.trim();
-        const skills = $("t-skills").value.split(",").map((s) => s.trim()).filter(Boolean);
-        const max_size = Number($("t-size").value) || 4;
-        try {
-          const res = await api("/api/teams", {
-            method: "POST",
-            body: JSON.stringify({ name, idea, skills_needed: skills, max_size }),
-          });
-          const d = await res.json().catch(() => ({}));
-          if (!res.ok) { $("t-err").textContent = d.error || "Could not create team"; return; }
-          $("t-name").value = ""; $("t-idea").value = ""; $("t-skills").value = ""; $("t-size").value = 4;
-          loadTeams();
-        } catch (e) { $("t-err").textContent = "Network error"; }
-      };
-
-      // ---- Projects carousel (vanilla "dimensional switch") ----
-      // Edit this list with your real CodeBox projects.
-      const PROJECTS = [
-        { name: "StudyBuddy", year: "2024", tag: "Web App",
-          blurb: "AI-powered study-group matcher that pairs members by course and schedule.",
-          tags: ["React", "Node", "Postgres"],
-          grad: "linear-gradient(135deg,#ff5f00,#ff9450)" },
-        { name: "HackTrack", year: "2024", tag: "Tooling",
-          blurb: "Live hackathon dashboard: teams, submissions, and judging in one place.",
-          tags: ["Next.js", "Firebase"],
-          grad: "linear-gradient(135deg,#4cc2ff,#5b7cfa)" },
-        { name: "CampusEats", year: "2024", tag: "Mobile",
-          blurb: "Group food ordering for club events with split-the-bill checkout.",
-          tags: ["Flutter", "Stripe"],
-          grad: "linear-gradient(135deg,#a78bfa,#7c5cff)" },
-        { name: "CodeQuiz", year: "2023", tag: "Game",
-          blurb: "Real-time coding trivia the whole room plays from their phones.",
-          tags: ["Socket.io", "Express"],
-          grad: "linear-gradient(135deg,#22c55e,#0ea5e9)" },
-        { name: "DevPortfolio", year: "2023", tag: "Generator",
-          blurb: "Turns a GitHub profile into a polished portfolio site in one click.",
-          tags: ["Vue", "GitHub API"],
-          grad: "linear-gradient(135deg,#f43f5e,#f59e0b)" },
+      // ---------- Navigation ----------
+      const NAV = [
+        { id: "projects", label: "Projects" },
+        { id: "profile", label: "My Profile", auth: true },
+        { id: "apps", label: "My Applications", auth: true },
+        { id: "lead", label: "Tech Lead", roles: ["tech_lead", "admin"] },
+        { id: "admin", label: "Admin", roles: ["admin"] },
       ];
+      function renderNav() {
+        $("nav").innerHTML = NAV.filter((n) => {
+          if (n.roles) return state.user && n.roles.includes(state.user.role);
+          if (n.auth) return !!state.user;
+          return true;
+        }).map((n) => `<button data-nav="${n.id}" class="${state.view === n.id ? "active" : ""}">${n.label}</button>`).join("");
+        $("nav").querySelectorAll("[data-nav]").forEach((b) => (b.onclick = () => go(b.dataset.nav)));
+      }
+      function go(view) {
+        // guard role-gated views
+        const def = NAV.find((n) => n.id === view);
+        if (def && def.roles && !(state.user && def.roles.includes(state.user.role))) view = "projects";
+        if (def && def.auth && !state.user) { openAuth(); return; }
+        state.view = view;
+        document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
+        $("view-" + view).classList.add("active");
+        renderNav();
+        if (view === "profile") loadProfile();
+        if (view === "apps") loadMyApps();
+        if (view === "lead") loadLead();
+        if (view === "admin") loadAdmin();
+        window.scrollTo({ top: $("hero").offsetHeight - 60, behavior: "smooth" });
+      }
 
-      const carousel = { i: 0, showingBack: false, animating: false, timer: null };
+      // ---------- Auth ----------
+      function renderWho() {
+        if (state.user) {
+          $("whoami").innerHTML =
+            `<span class="role-pill ${esc(state.user.role)}">${esc(state.user.role.replace("_"," "))}</span>` +
+            `<span>${esc(state.user.name || state.user.username)}</span>` +
+            `<button class="btn ghost sm" id="logout-btn">Log out</button>`;
+          $("logout-btn").onclick = logout;
+        } else {
+          $("whoami").innerHTML = `<button class="btn sm" id="login-btn">Log in / Sign up</button>`;
+          $("login-btn").onclick = openAuth;
+        }
+      }
+      function logout() {
+        localStorage.removeItem("cbm_token"); state.token = null; state.user = null;
+        renderWho(); renderNav(); go("projects"); loadProjects();
+      }
+      function openAuth(mode = "login") {
+        openModal(`
+          <button class="x" onclick="closeModal()">&times;</button>
+          <h3 id="auth-h">${mode === "login" ? "Welcome back" : "Join CodeBox Match"}</h3>
+          <div class="field" id="name-field" style="${mode === "login" ? "display:none" : ""}">
+            <label>Full name</label><input id="a-name" placeholder="Ada Lovelace" />
+          </div>
+          <div class="field"><label>Username</label><input id="a-user" placeholder="ada_l" /></div>
+          <div class="field"><label>Password</label><input id="a-pass" type="password" placeholder="6+ characters" /></div>
+          <button class="btn" style="width:100%" id="a-submit">${mode === "login" ? "Log in" : "Create account"}</button>
+          <div class="err" id="a-err"></div>
+          <p style="text-align:center;color:var(--muted);font-size:.82rem;margin:.9rem 0 0">
+            ${mode === "login" ? "New here?" : "Have an account?"}
+            <a href="#" id="a-toggle" style="color:var(--accent)">${mode === "login" ? "Sign up" : "Log in"}</a>
+          </p>
+          <p style="text-align:center;color:var(--muted);font-size:.72rem;margin:.6rem 0 0">Try the demo admin: <b>admin</b> / <b>admin123</b></p>
+        `);
+        $("a-toggle").onclick = (e) => { e.preventDefault(); openAuth(mode === "login" ? "register" : "login"); };
+        $("a-submit").onclick = () => submitAuth(mode);
+      }
+      async function submitAuth(mode) {
+        $("a-err").textContent = "";
+        const body = { username: $("a-user").value.trim(), password: $("a-pass").value };
+        if (mode === "register") body.name = ($("a-name") ? $("a-name").value.trim() : "");
+        try {
+          const res = await api("/api/auth/" + mode, { method: "POST", body: JSON.stringify(body) });
+          const d = await res.json();
+          if (!res.ok) { $("a-err").textContent = d.error || "Something went wrong"; return; }
+          state.token = d.token; state.user = d.user;
+          localStorage.setItem("cbm_token", d.token);
+          closeModal(); renderWho(); renderNav(); loadProjects();
+        } catch (e) { $("a-err").textContent = "Network error"; }
+      }
 
-      function faceHtml(p) {
+      // ---------- Modal helpers ----------
+      function openModal(html) { $("modal").innerHTML = html; $("modal-bg").classList.add("show"); }
+      function closeModal() { $("modal-bg").classList.remove("show"); }
+      $("modal-bg").addEventListener("click", (e) => { if (e.target === $("modal-bg")) closeModal(); });
+
+      // ---------- Projects ----------
+      async function loadProjects() {
+        const res = await api("/api/projects");
+        state.projects = await res.json();
+        renderProjects();
+        renderHero();
+      }
+      function renderProjects() {
+        const grid = $("projects-grid");
+        if (!state.projects.length) { grid.innerHTML = `<div class="empty"><div class="big">&#128230;</div>No projects yet.</div>`; return; }
+        grid.innerHTML = state.projects.map(projectCard).join("");
+        grid.querySelectorAll("[data-apply]").forEach((b) => (b.onclick = () => openApply(+b.dataset.apply)));
+        grid.querySelectorAll("[data-edit]").forEach((b) => (b.onclick = () => openProjectForm(+b.dataset.edit)));
+        grid.querySelectorAll("[data-del]").forEach((b) => (b.onclick = () => deleteProject(+b.dataset.del)));
+        grid.querySelectorAll("[data-appl]").forEach((b) => (b.onclick = () => openApplicants(+b.dataset.appl)));
+      }
+      function projectCard(p) {
+        const stack = p.tech_stack.map((t) => `<span class="badge">${esc(t)}</span>`).join("");
+        const roles = p.needed_roles.map((r) => `<span class="badge role">${esc(r)}</span>`).join("");
+        const manager = isManager(p);
+        let actions = "";
+        if (state.user && !manager) actions += `<button class="btn sm" data-apply="${p.id}">I'm interested</button>`;
+        if (manager) actions += `<button class="btn ghost sm" data-appl="${p.id}">Applicants (${p.interested})</button>
+                                 <button class="btn ghost sm" data-edit="${p.id}">Edit</button>
+                                 <button class="btn danger sm" data-del="${p.id}">Delete</button>`;
+        if (!state.user) actions += `<span class="pc-foot"><span class="meta">Log in to apply</span></span>`;
         return `
-          <span class="ftag">${esc(p.tag)}</span>
-          <span class="fyear">${esc(p.year)}</span>
-          <div class="fbody">
-            <h3>${esc(p.name)}</h3>
-            <p>${esc(p.blurb)}</p>
-            <div class="tags">${p.tags.map((t) => `<span>${esc(t)}</span>`).join("")}</div>
+          <div class="pcard" style="--pc-accent:${esc(p.accent)}">
+            <div class="pc-top">
+              <div>
+                <span class="pill ${esc(p.status)}">${esc(p.status.replace("_"," "))}</span>
+                <h3>${esc(p.title)}</h3>
+                <div class="by">by ${esc(p.creator)} &middot; ${esc(p.category)} &middot; ${esc(p.difficulty)}</div>
+              </div>
+            </div>
+            <p class="desc">${esc(p.description)}</p>
+            <div class="badges">${stack}</div>
+            <div class="badges">${roles || '<span class="meta" style="font-size:.76rem;color:var(--muted)">No roles listed</span>'}</div>
+            <div class="pc-foot">
+              <span class="meta">&#128100; ${p.interested} interested${p.timeline ? " &middot; " + esc(p.timeline) : ""}</span>
+              <div class="pc-actions">${actions}</div>
+            </div>
           </div>`;
       }
 
-      function paintDots() {
-        $("dots").innerHTML = PROJECTS.map(
-          (_, idx) => `<button data-i="${idx}" class="${idx === carousel.i ? "active" : ""}" aria-label="Go to project ${idx + 1}"></button>`
-        ).join("");
-        $("dots").querySelectorAll("button").forEach((b) => (b.onclick = () => goTo(+b.dataset.i)));
+      function openProjectForm(id) {
+        const p = id ? state.projects.find((x) => x.id === id) : null;
+        const v = (k, d = "") => (p ? (Array.isArray(p[k]) ? p[k].join(", ") : p[k]) : d);
+        openModal(`
+          <button class="x" onclick="closeModal()">&times;</button>
+          <h3>${p ? "Edit project" : "Submit a project idea"}</h3>
+          <div class="field"><label>Title</label><input id="f-title" value="${esc(v("title"))}" placeholder="Prismatic Rift" /></div>
+          <div class="field"><label>Description</label><textarea id="f-desc" placeholder="What are you building and why?">${esc(v("description"))}</textarea></div>
+          <div class="row2">
+            <div class="field"><label>Category</label><input id="f-cat" value="${esc(v("category","Web"))}" /></div>
+            <div class="field"><label>Difficulty</label>
+              <select id="f-diff">${["beginner","intermediate","advanced"].map((d)=>`<option ${v("difficulty","intermediate")===d?"selected":""}>${d}</option>`).join("")}</select>
+            </div>
+          </div>
+          <div class="field"><label>Tech stack (comma-separated)</label><input id="f-stack" value="${esc(v("tech_stack"))}" placeholder="React, Node, Postgres" /></div>
+          <div class="field"><label>Needed roles (comma-separated)</label><input id="f-roles" value="${esc(v("needed_roles"))}" placeholder="Frontend, Backend, Design" /></div>
+          <div class="row2">
+            <div class="field"><label>Timeline</label><input id="f-time" value="${esc(v("timeline"))}" placeholder="6 weeks" /></div>
+            <div class="field"><label>Accent color</label><input id="f-accent" type="color" value="${esc(v("accent","#7b61ff"))}" style="height:42px;padding:4px" /></div>
+          </div>
+          ${p ? `<div class="field"><label>Status</label><select id="f-status">${["open","reviewing","team_formed","closed"].map((s)=>`<option value="${s}" ${p.status===s?"selected":""}>${s.replace("_"," ")}</option>`).join("")}</select></div>` : ""}
+          <button class="btn" style="width:100%" id="f-submit">${p ? "Save changes" : "Submit idea"}</button>
+          <div class="err" id="f-err"></div>
+        `);
+        $("f-submit").onclick = async () => {
+          $("f-err").textContent = "";
+          const body = {
+            title: $("f-title").value.trim(), description: $("f-desc").value.trim(),
+            category: $("f-cat").value.trim(), difficulty: $("f-diff").value,
+            tech_stack: $("f-stack").value.split(",").map((s)=>s.trim()).filter(Boolean),
+            needed_roles: $("f-roles").value.split(",").map((s)=>s.trim()).filter(Boolean),
+            timeline: $("f-time").value.trim(), accent: $("f-accent").value,
+          };
+          if (p) body.status = $("f-status").value;
+          const res = await api(p ? "/api/projects/" + p.id : "/api/projects", { method: p ? "PUT" : "POST", body: JSON.stringify(body) });
+          const d = await res.json();
+          if (!res.ok) { $("f-err").textContent = d.error || "Could not save"; return; }
+          closeModal(); loadProjects();
+        };
+      }
+      async function deleteProject(id) {
+        if (!confirm("Delete this project?")) return;
+        const res = await api("/api/projects/" + id, { method: "DELETE" });
+        if (res.ok || res.status === 204) loadProjects();
       }
 
-      function initCarousel() {
-        const first = PROJECTS[0];
-        $("face-front").innerHTML = faceHtml(first);
-        $("face-front").style.background = first.grad;
-        $("title-a").textContent = first.name;
-        paintDots();
-        startAuto();
+      // ---------- Apply ----------
+      function openApply(projectId) {
+        if (!state.user) return openAuth();
+        const p = state.projects.find((x) => x.id === projectId);
+        openModal(`
+          <button class="x" onclick="closeModal()">&times;</button>
+          <h3>Apply to ${esc(p.title)}</h3>
+          <div class="field"><label>Preferred role</label>
+            <select id="ap-role">${(p.needed_roles.length?p.needed_roles:["Contributor"]).map((r)=>`<option>${esc(r)}</option>`).join("")}</select>
+          </div>
+          <div class="field"><label>Interest level</label>
+            <select id="ap-level">${["high","medium","low"].map((l)=>`<option>${l}</option>`).join("")}</select>
+          </div>
+          <div class="field"><label>Why do you want in?</label><textarea id="ap-msg" placeholder="A sentence on what you'd bring."></textarea></div>
+          <button class="btn" style="width:100%" id="ap-submit">Submit interest</button>
+          <div class="err" id="ap-err"></div>
+        `);
+        $("ap-submit").onclick = async () => {
+          $("ap-err").textContent = "";
+          const body = { project_id: projectId, preferred_role: $("ap-role").value, interest_level: $("ap-level").value, message: $("ap-msg").value.trim() };
+          const res = await api("/api/applications", { method: "POST", body: JSON.stringify(body) });
+          const d = await res.json();
+          if (!res.ok) { $("ap-err").textContent = d.error || "Could not apply"; return; }
+          closeModal(); loadProjects();
+        };
       }
 
-      function flipTo(dir, newIndex) {
-        if (carousel.animating || newIndex === carousel.i) return;
-        carousel.animating = true;
-
-        const goingNext = dir === "next";
-        const p = PROJECTS[newIndex];
-        const incomingFace = carousel.showingBack ? $("face-front") : $("face-back");
-        incomingFace.innerHTML = faceHtml(p);
-        incomingFace.style.background = p.grad;
-
-        // Flip the card
-        carousel.showingBack = !carousel.showingBack;
-        const rot = carousel.showingBack ? 180 : 0;
-        $("flipper").style.transform = `rotateY(${rot}deg)`;
-
-        // Swap the big title with a translate/rotate
-        const outEl = $("title-a").style.opacity !== "0" ? $("title-a") : $("title-b");
-        const inEl = outEl.id === "title-a" ? $("title-b") : $("title-a");
-        const dx = goingNext ? 1 : -1;
-        inEl.textContent = p.name;
-        inEl.style.transition = "none";
-        inEl.style.transform = `translateX(${dx * 60}px) rotateY(${dx * 45}deg)`;
-        inEl.style.opacity = "0";
-        // force reflow
-        void inEl.offsetWidth;
-        inEl.style.transition = "";
-        outEl.style.transform = `translateX(${-dx * 60}px) rotateY(${-dx * 45}deg)`;
-        outEl.style.opacity = "0";
-        inEl.style.transform = "translateX(0) rotateY(0)";
-        inEl.style.opacity = "1";
-
-        carousel.i = newIndex;
-        paintDots();
-        setTimeout(() => { carousel.animating = false; }, 760);
+      // ---------- Applicants (tech lead) ----------
+      async function openApplicants(projectId) {
+        const p = state.projects.find((x) => x.id === projectId);
+        const res = await api("/api/applications/project/" + projectId);
+        const apps = await res.json();
+        openModal(`
+          <button class="x" onclick="closeModal()">&times;</button>
+          <h3>Applicants &mdash; ${esc(p.title)}</h3>
+          <div style="margin-bottom:.8rem"><label>Project status</label>
+            <select id="proj-status">${["open","reviewing","team_formed","closed"].map((s)=>`<option value="${s}" ${p.status===s?"selected":""}>${s.replace("_"," ")}</option>`).join("")}</select>
+          </div>
+          <div id="applicants">${!apps.length ? '<div class="empty">No applicants yet.</div>' : apps.map(applicantRow).join("")}</div>
+        `);
+        $("proj-status").onchange = async (e) => {
+          await api("/api/projects/" + projectId, { method: "PUT", body: JSON.stringify({ status: e.target.value }) });
+          loadProjects();
+        };
+        bindApplicantButtons(projectId);
+      }
+      function applicantRow(a) {
+        return `
+          <div class="applicant">
+            <div>
+              <div class="ai">${esc(a.developer_name || a.developer)} <span class="pill ${esc(a.status)}">${esc(a.status)}</span></div>
+              <div class="msg">wants <b>${esc(a.preferred_role || "any role")}</b> &middot; ${esc(a.interest_level)} interest</div>
+              ${a.message ? `<div class="msg">&ldquo;${esc(a.message)}&rdquo;</div>` : ""}
+            </div>
+            <div class="pc-actions">
+              <button class="btn ok sm" data-set="accepted" data-id="${a.id}">Accept</button>
+              <button class="btn warn sm" data-set="waitlisted" data-id="${a.id}">Waitlist</button>
+              <button class="btn danger sm" data-set="rejected" data-id="${a.id}">Reject</button>
+            </div>
+          </div>`;
+      }
+      function bindApplicantButtons(projectId) {
+        $("applicants").querySelectorAll("[data-set]").forEach((b) => (b.onclick = async () => {
+          await api("/api/applications/" + b.dataset.id + "/status", { method: "PUT", body: JSON.stringify({ status: b.dataset.set }) });
+          openApplicants(projectId);
+        }));
       }
 
-      function step(dir) {
-        const n = PROJECTS.length;
-        const next = dir === "next"
-          ? (carousel.i + 1) % n
-          : (carousel.i - 1 + n) % n;
-        flipTo(dir, next);
+      // ---------- Profile ----------
+      async function loadProfile() {
+        const res = await api("/api/profiles/me");
+        const p = (await res.json()) || {};
+        const arr = (v) => (Array.isArray(v) ? v.join(", ") : v || "");
+        $("profile-panel").innerHTML = `
+          <div class="row2">
+            <div class="field"><label>Skills (comma-separated)</label><input id="pr-skills" value="${esc(arr(p.skills))}" placeholder="React, Python, SQL" /></div>
+            <div class="field"><label>Experience level</label>
+              <select id="pr-exp">${["beginner","intermediate","advanced"].map((l)=>`<option ${p.experience_level===l?"selected":""}>${l}</option>`).join("")}</select>
+            </div>
+          </div>
+          <div class="row2">
+            <div class="field"><label>Availability</label><input id="pr-avail" value="${esc(p.availability||"")}" placeholder="10 hrs/week" /></div>
+            <div class="field"><label>Preferred roles (comma-separated)</label><input id="pr-roles" value="${esc(arr(p.preferred_roles))}" placeholder="Frontend, Design" /></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label>GitHub URL</label><input id="pr-gh" value="${esc(p.github_url||"")}" placeholder="https://github.com/you" /></div>
+            <div class="field"><label>Portfolio URL</label><input id="pr-pf" value="${esc(p.portfolio_url||"")}" placeholder="https://you.dev" /></div>
+          </div>
+          <div class="field"><label>Short bio</label><textarea id="pr-bio" placeholder="A couple sentences about you.">${esc(p.bio||"")}</textarea></div>
+          <button class="btn" id="pr-save">Save profile</button> <span id="pr-saved" style="color:var(--ok);font-size:.85rem;margin-left:.6rem"></span>
+        `;
+        $("pr-save").onclick = async () => {
+          const body = {
+            skills: $("pr-skills").value.split(",").map((s)=>s.trim()).filter(Boolean),
+            experience_level: $("pr-exp").value, availability: $("pr-avail").value.trim(),
+            preferred_roles: $("pr-roles").value.split(",").map((s)=>s.trim()).filter(Boolean),
+            github_url: $("pr-gh").value.trim(), portfolio_url: $("pr-pf").value.trim(), bio: $("pr-bio").value.trim(),
+          };
+          await api("/api/profiles/me", { method: "PUT", body: JSON.stringify(body) });
+          $("pr-saved").textContent = "Saved ✓"; setTimeout(() => ($("pr-saved").textContent = ""), 1800);
+        };
       }
 
-      function goTo(idx) {
-        if (idx === carousel.i) return;
-        const dir = idx > carousel.i ? "next" : "prev";
-        flipTo(dir, idx);
+      // ---------- My applications ----------
+      async function loadMyApps() {
+        const res = await api("/api/applications/mine");
+        const apps = await res.json();
+        $("apps-list").innerHTML = !apps.length
+          ? `<div class="empty"><div class="big">&#128075;</div>No applications yet. Browse projects and hit "I'm interested".</div>`
+          : `<div class="grid">${apps.map((a) => `
+              <div class="pcard">
+                <div class="pc-top"><div><span class="pill ${esc(a.status)}">${esc(a.status)}</span><h3>${esc(a.project_title)}</h3>
+                <div class="by">applied as ${esc(a.preferred_role||"any role")} &middot; ${esc(a.interest_level)} interest</div></div></div>
+                ${a.message ? `<p class="desc">&ldquo;${esc(a.message)}&rdquo;</p>` : ""}
+                <div class="pc-foot"><span class="meta">${esc(a.created_at)}</span>
+                <button class="btn danger sm" data-withdraw="${a.id}">Withdraw</button></div>
+              </div>`).join("")}</div>`;
+        $("apps-list").querySelectorAll("[data-withdraw]").forEach((b) => (b.onclick = async () => {
+          if (!confirm("Withdraw this application?")) return;
+          await api("/api/applications/" + b.dataset.withdraw, { method: "DELETE" });
+          loadMyApps();
+        }));
       }
 
-      function startAuto() {
-        stopAuto();
-        carousel.timer = window.setInterval(() => step("next"), 3200);
+      // ---------- Tech lead dashboard ----------
+      async function loadLead() {
+        const res = await api("/api/projects");
+        const all = await res.json();
+        const mine = all.filter((p) => isManager(p));
+        $("lead-list").innerHTML = !mine.length
+          ? `<div class="empty"><div class="big">&#128193;</div>No projects to manage yet. Submit an idea, or ask an admin to assign you as tech lead.</div>`
+          : `<div class="grid">${mine.map(projectCard).join("")}</div>`;
+        // rebind actions inside this view
+        $("lead-list").querySelectorAll("[data-appl]").forEach((b) => (b.onclick = () => openApplicants(+b.dataset.appl)));
+        $("lead-list").querySelectorAll("[data-edit]").forEach((b) => (b.onclick = () => openProjectForm(+b.dataset.edit)));
+        $("lead-list").querySelectorAll("[data-del]").forEach((b) => (b.onclick = () => deleteProject(+b.dataset.del)));
       }
-      function stopAuto() { if (carousel.timer) window.clearInterval(carousel.timer); }
 
-      $("next").onclick = () => { step("next"); startAuto(); };
-      $("prev").onclick = () => { step("prev"); startAuto(); };
-      $("stage").addEventListener("mouseenter", stopAuto);
-      $("stage").addEventListener("mouseleave", startAuto);
+      // ---------- Admin dashboard ----------
+      async function loadAdmin() {
+        const res = await api("/api/admin/users");
+        if (!res.ok) { $("admin-panel").innerHTML = `<div class="empty">Admin only.</div>`; return; }
+        const users = await res.json();
+        $("admin-panel").innerHTML = `
+          <table><thead><tr><th>Member</th><th>Username</th><th>Role</th><th>Change role</th></tr></thead>
+          <tbody>${users.map((u) => `
+            <tr>
+              <td>${esc(u.name || "—")}</td>
+              <td class="mono">${esc(u.username)}</td>
+              <td><span class="role-pill ${esc(u.role)}">${esc(u.role.replace("_"," "))}</span></td>
+              <td>${u.id === state.user.id ? '<span class="meta" style="color:var(--muted);font-size:.8rem">(you)</span>' :
+                `<select data-role="${u.id}">${["developer","tech_lead","admin"].map((r)=>`<option value="${r}" ${u.role===r?"selected":""}>${r.replace("_"," ")}</option>`).join("")}</select>`}</td>
+            </tr>`).join("")}</tbody></table>`;
+        $("admin-panel").querySelectorAll("[data-role]").forEach((sel) => (sel.onchange = async () => {
+          const res = await api("/api/admin/users/" + sel.dataset.role + "/role", { method: "PUT", body: JSON.stringify({ role: sel.value }) });
+          if (!res.ok) { const d = await res.json(); alert(d.error || "Could not update role"); }
+          loadAdmin();
+        }));
+      }
 
-      // ---- Boot ----
+      // ---------- Hero carousel (vanilla MONTRA style) ----------
+      const HERO_W = 150, HERO_GAP = 12;
+      function heroItems() {
+        const open = state.projects.filter((p) => p.status !== "closed");
+        return (open.length ? open : state.projects).slice(0, 9);
+      }
+      function renderHero() {
+        const items = heroItems();
+        if (!items.length) { $("hero").style.display = "none"; return; }
+        $("hero").style.display = "";
+        $("strip").innerHTML = items.map((p, i) => `
+          <button class="hcard ${i === state.hero ? "active" : ""}" data-h="${i}"
+            style="background:linear-gradient(150deg, ${esc(p.accent)}, #0a0d1a)">
+            <span class="hstat">${esc(p.status.replace("_"," "))}</span>
+            <span class="ht">${esc(p.title)}</span>
+          </button>`).join("");
+        $("strip").querySelectorAll("[data-h]").forEach((b) => (b.onclick = () => focusHero(+b.dataset.h)));
+        $("rail-n").textContent = String(items.length).padStart(2, "0");
+        if (state.hero >= items.length) state.hero = 0;
+        paintHero();
+        startHeroAuto();
+      }
+      function paintHero() {
+        const items = heroItems();
+        const p = items[state.hero];
+        if (!p) return;
+        $("hero-bg").style.background = `radial-gradient(120% 120% at 70% 20%, ${p.accent} 0%, ${p.accent}99 30%, #05060b 78%)`;
+        const t = $("hero-title");
+        t.style.opacity = 0; t.style.transform = "translateY(10px)";
+        setTimeout(() => {
+          t.textContent = p.title;
+          $("hero-credit").textContent = "BY " + (p.creator || "CODEBOX").toUpperCase() + ".";
+          $("hero-meta").innerHTML = [p.category, p.difficulty, p.status.replace("_"," ")].map((m) => `<span>${esc(String(m).toUpperCase())}</span>`).join("");
+          t.style.opacity = 1; t.style.transform = "none";
+        }, 180);
+        // strip centering
+        const stage = $("hero").clientWidth;
+        const step = HERO_W + HERO_GAP;
+        const x = stage / 2 - (state.hero * step + HERO_W / 2);
+        $("strip").style.transform = `translateX(${x}px)`;
+        $("strip").querySelectorAll(".hcard").forEach((c, i) => c.classList.toggle("active", i === state.hero));
+        // rail
+        $("rail-i").textContent = String(state.hero + 1).padStart(2, "0");
+        $("rail-fill").style.width = 100 / items.length + "%";
+        $("rail-fill").style.left = (state.hero / items.length) * 100 + "%";
+      }
+      function focusHero(i) {
+        const items = heroItems();
+        state.hero = (i + items.length) % items.length;
+        paintHero(); startHeroAuto();
+      }
+      function startHeroAuto() {
+        stopHeroAuto();
+        state.heroTimer = window.setInterval(() => focusHero(state.hero + 1), 3800);
+      }
+      function stopHeroAuto() { if (state.heroTimer) clearInterval(state.heroTimer); }
+      $("hero").addEventListener("mouseenter", stopHeroAuto);
+      $("hero").addEventListener("mouseleave", startHeroAuto);
+      window.addEventListener("resize", paintHero);
+
+      // ---------- New project button ----------
+      $("new-project-btn").onclick = () => (state.user ? openProjectForm() : openAuth());
+
+      // ---------- Boot ----------
       async function boot() {
-        initCarousel();
-        const token = localStorage.getItem("cb_token");
+        const token = localStorage.getItem("cbm_token");
         if (token) {
+          state.token = token;
           try {
             const res = await api("/api/auth/me");
-            if (res.ok) { state.user = (await res.json()).user; }
-            else localStorage.removeItem("cb_token");
+            if (res.ok) { const d = await res.json(); state.user = d.user; state.token = d.token; localStorage.setItem("cbm_token", d.token); }
+            else { localStorage.removeItem("cbm_token"); state.token = null; }
           } catch (e) {}
         }
-        setMode("login");
-        render();
-        loadBoard();
-        loadTeams();
+        renderWho(); renderNav(); await loadProjects();
       }
       boot();
     </script>

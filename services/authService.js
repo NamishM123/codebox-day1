@@ -1,44 +1,72 @@
-// Authentication logic: member registration and login.
-// Passwords are hashed with scrypt (Node's built-in crypto) + a per-user
-// random salt, so plaintext passwords are never stored. No native deps.
+// Auth + user management: register, login, and admin user operations.
+// Passwords are scrypt-hashed with a per-user salt.
 
 const crypto = require("crypto");
 const db = require("../db");
 
+const ROLES = ["developer", "tech_lead", "admin"];
+
 function hashPassword(password, salt = crypto.randomBytes(16).toString("hex")) {
-  const hash = crypto.scryptSync(password, salt, 64).toString("hex");
-  return { hash, salt };
+  return { hash: crypto.scryptSync(password, salt, 64).toString("hex"), salt };
 }
 
-// Constant-time comparison to avoid timing attacks.
-function verifyPassword(password, salt, expectedHash) {
+function verifyPassword(password, salt, expected) {
   const { hash } = hashPassword(password, salt);
   const a = Buffer.from(hash, "hex");
-  const b = Buffer.from(expectedHash, "hex");
+  const b = Buffer.from(expected, "hex");
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
-// Create a new member. Throws if the username already exists (UNIQUE).
-function registerMember(username, password) {
+function publicUser(m) {
+  if (!m) return null;
+  return { id: m.id, username: m.username, name: m.name, role: m.role };
+}
+
+function registerMember(username, name, password) {
   const { hash, salt } = hashPassword(password);
   const result = db
     .prepare(
-      "INSERT INTO members (username, password_hash, password_salt) VALUES (?, ?, ?)"
+      "INSERT INTO members (username, name, role, password_hash, password_salt) VALUES (?, ?, 'developer', ?, ?)"
     )
-    .run(username, hash, salt);
-  return { id: result.lastInsertRowid, username };
+    .run(username, name || username, hash, salt);
+  return publicUser(getById(result.lastInsertRowid));
 }
 
-function findByUsername(username) {
+function getByUsername(username) {
   return db.prepare("SELECT * FROM members WHERE username = ?").get(username);
 }
 
-// Returns { id, username } on success, or null on bad credentials.
-function authenticate(username, password) {
-  const member = findByUsername(username);
-  if (!member) return null;
-  const ok = verifyPassword(password, member.password_salt, member.password_hash);
-  return ok ? { id: member.id, username: member.username } : null;
+function getById(id) {
+  return db.prepare("SELECT * FROM members WHERE id = ?").get(Number(id));
 }
 
-module.exports = { registerMember, findByUsername, authenticate };
+function authenticate(username, password) {
+  const m = getByUsername(username);
+  if (!m) return null;
+  return verifyPassword(password, m.password_salt, m.password_hash) ? publicUser(m) : null;
+}
+
+// --- Admin operations ---
+function listUsers() {
+  return db
+    .prepare("SELECT id, username, name, role, created_at FROM members ORDER BY id")
+    .all();
+}
+
+function setRole(id, role) {
+  if (!ROLES.includes(role)) return { ok: false, reason: "bad_role" };
+  const user = getById(id);
+  if (!user) return { ok: false, reason: "not_found" };
+  db.prepare("UPDATE members SET role = ? WHERE id = ?").run(role, Number(id));
+  return { ok: true, user: publicUser(getById(id)) };
+}
+
+module.exports = {
+  ROLES,
+  registerMember,
+  authenticate,
+  getById,
+  publicUser,
+  listUsers,
+  setRole,
+};

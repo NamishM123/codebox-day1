@@ -1,58 +1,48 @@
-// Authentication routes: register, login, and current-member lookup.
+// Auth routes: register, login, current user.
 
 const express = require("express");
-const { registerMember, authenticate } = require("../services/authService");
+const { registerMember, authenticate, getById, publicUser } = require("../services/authService");
 const { signToken, requireAuth } = require("../middleware/auth");
 
 const router = express.Router();
 
-// POST /api/auth/register -> create account, return a token
-router.post("/register", (req, res) => {
-  const { username, password } = req.body || {};
+function tokenFor(user) {
+  return signToken({ sub: user.id, username: user.username, role: user.role });
+}
 
-  if (!username || typeof username !== "string" || username.trim().length < 3) {
-    return res
-      .status(400)
-      .json({ error: "username must be at least 3 characters" });
-  }
-  if (!password || typeof password !== "string" || password.length < 6) {
-    return res
-      .status(400)
-      .json({ error: "password must be at least 6 characters" });
-  }
+// POST /api/auth/register -> everyone starts as a developer
+router.post("/register", (req, res) => {
+  const { username, name, password } = req.body || {};
+  if (!username || typeof username !== "string" || username.trim().length < 3)
+    return res.status(400).json({ error: "username must be at least 3 characters" });
+  if (!password || typeof password !== "string" || password.length < 6)
+    return res.status(400).json({ error: "password must be at least 6 characters" });
 
   try {
-    const member = registerMember(username.trim(), password);
-    const token = signToken({ sub: member.id, username: member.username });
-    res.status(201).json({ token, user: member });
+    const user = registerMember(username.trim(), (name || "").trim(), password);
+    res.status(201).json({ token: tokenFor(user), user });
   } catch (err) {
-    if (String(err.message).includes("UNIQUE")) {
+    if (String(err.message).includes("UNIQUE"))
       return res.status(409).json({ error: "username already taken" });
-    }
     res.status(500).json({ error: "could not register" });
   }
 });
 
-// POST /api/auth/login -> verify credentials, return a token
+// POST /api/auth/login
 router.post("/login", (req, res) => {
   const { username, password } = req.body || {};
-
-  if (!username || !password) {
+  if (!username || !password)
     return res.status(400).json({ error: "username and password are required" });
-  }
-
-  const member = authenticate(username, password);
-  if (!member) {
-    return res.status(401).json({ error: "invalid username or password" });
-  }
-
-  const token = signToken({ sub: member.id, username: member.username });
-  res.json({ token, user: member });
+  const user = authenticate(username, password);
+  if (!user) return res.status(401).json({ error: "invalid username or password" });
+  res.json({ token: tokenFor(user), user });
 });
 
-// GET /api/auth/me -> the current member (requires a valid token)
+// GET /api/auth/me -> fresh user record (role may have changed since login)
 router.get("/me", requireAuth, (req, res) => {
-  res.json({ user: req.user });
+  const user = publicUser(getById(req.user.id));
+  if (!user) return res.status(404).json({ error: "user not found" });
+  res.json({ user, token: tokenFor(user) });
 });
 
 module.exports = router;
