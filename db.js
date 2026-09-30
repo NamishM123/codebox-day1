@@ -27,6 +27,8 @@ if (useSupabase) {
     keepAlive: true,
     idleTimeoutMillis: 10000,
     connectionTimeoutMillis: 8000,
+    query_timeout: 8000,
+    statement_timeout: 8000,
     allowExitOnIdle: true,
   });
   backend = { query: (sql, params) => pool.query(sql, params) };
