@@ -42,6 +42,9 @@ app.use((req, res, next) => {
   req.on("error", () => { clearTimeout(timer); finish(); });
 });
 
+// Serve static assets (e.g. the cover video) from public/.
+app.use(express.static(path.join(__dirname, "public")));
+
 // Homepage: the CodeBox Match single-page app.
 app.get("/", (req, res) => res.type("html").send(indexHtml));
 
