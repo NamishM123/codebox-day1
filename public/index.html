@@ -575,6 +575,7 @@
           }
           g.innerHTML = devs.map(devCard).join("");
           g.querySelectorAll("[data-connect]").forEach((b) => (b.onclick = () => openConnect(+b.dataset.connect, b.dataset.name)));
+          g.querySelectorAll("[data-addteam]").forEach((b) => (b.onclick = () => openAddTeam(+b.dataset.addteam, b.dataset.name)));
         } catch (e) { $("devs-grid").innerHTML = '<div class="empty">Could not load developers.</div>'; }
       }
       function devCard(d) {
@@ -590,7 +591,7 @@
             ${d.bio ? `<p class="desc">${esc(d.bio)}</p>` : ""}
             <div class="badges">${skills}</div>
             ${links ? `<div class="meta" style="font-size:.8rem">${links}</div>` : ""}
-            ${state.user && state.user.id !== d.id ? `<div style="margin-top:.8rem"><button class="btn sm" data-connect="${d.id}" data-name="${esc(d.name || d.username)}">Connect</button></div>` : ""}
+            ${state.user && state.user.id !== d.id ? `<div style="margin-top:.8rem;display:flex;gap:.5rem;flex-wrap:wrap"><button class="btn sm" data-connect="${d.id}" data-name="${esc(d.name || d.username)}">Connect</button>${(state.user.role === "tech_lead" || state.user.role === "admin") ? `<button class="btn sm ghost" data-addteam="${d.id}" data-name="${esc(d.name || d.username)}">Add to team</button>` : ""}</div>` : ""}
           </div></div>`;
       }
       function openConnect(id, name) {
@@ -606,6 +607,41 @@
           const d = await res.json().catch(() => ({}));
           if (!res.ok) { $("cn-err").textContent = d.error || "Could not send"; return; }
           closeModal();
+        };
+      }
+      // Tech lead picks one of their projects and adds this dev onto the team.
+      async function openAddTeam(id, name) {
+        if (!state.user) return openAuth();
+        let mine = [];
+        try {
+          const res = await api("/api/projects");
+          const all = await res.json();
+          mine = (Array.isArray(all) ? all : []).filter(
+            (p) => state.user.role === "admin" || p.created_by === state.user.id || p.tech_lead_id === state.user.id
+          );
+        } catch (e) {}
+        if (!mine.length) {
+          openModal(`<button class="x" onclick="closeModal()">&times;</button>
+            <h3>Add ${esc(name)} to a team</h3>
+            <p class="desc">You don't lead any projects yet. Create one on the Projects page first, then you can staff it from here.</p>`);
+          return;
+        }
+        const opts = mine.map((p) => `<option value="${p.id}">${esc(p.title)}</option>`).join("");
+        openModal(`
+          <button class="x" onclick="closeModal()">&times;</button>
+          <h3>Add ${esc(name)} to a team</h3>
+          <div class="field"><label>Which project?</label><select id="at-proj">${opts}</select></div>
+          <button class="btn" style="width:100%" id="at-add">Add to team</button>
+          <div class="err" id="at-err"></div>`);
+        $("at-add").onclick = async () => {
+          const res = await api("/api/applications/add", {
+            method: "POST",
+            body: JSON.stringify({ project_id: +$("at-proj").value, developer_id: id }),
+          });
+          const d = await res.json().catch(() => ({}));
+          if (!res.ok) { $("at-err").textContent = d.error || "Could not add"; return; }
+          closeModal();
+          alert(name + " added to the team.");
         };
       }
       async function loadConnections() {

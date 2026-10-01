@@ -30,6 +30,20 @@ router.post("/", requireAuth, async (req, res) => {
   res.status(code).json({ error: msg });
 });
 
+// POST /api/applications/add -> a tech lead adds a developer onto their project
+router.post("/add", requireAuth, async (req, res) => {
+  const { project_id, developer_id } = req.body || {};
+  if (!project_id || !developer_id)
+    return res.status(400).json({ error: "project_id and developer_id are required" });
+  const project = await projSvc.getById(project_id);
+  if (!project) return res.status(404).json({ error: "project not found" });
+  if (!managesProject(req.user, project))
+    return res.status(403).json({ error: "only the project's tech lead can add members" });
+  const result = await appSvc.addMember(project_id, developer_id);
+  if (result.ok) return res.status(201).json(result.application);
+  res.status(400).json({ error: "could not add member" });
+});
+
 // GET /api/applications/mine -> the developer's own applications
 router.get("/mine", requireAuth, async (req, res) => {
   res.json(await appSvc.listByDeveloper(req.user.id));

@@ -48,6 +48,27 @@ async function apply(projectId, developerId, d) {
   return { ok: true, application: await getById(rows[0].id) };
 }
 
+// A tech lead adds a developer straight onto one of their projects. If the dev
+// already applied, this just approves (accepts) that existing application.
+async function addMember(projectId, developerId) {
+  const proj = await db.get("SELECT id FROM projects WHERE id = $1", [Number(projectId)]);
+  if (!proj) return { ok: false, reason: "no_project" };
+  const dup = await db.get(
+    "SELECT id FROM applications WHERE project_id = $1 AND developer_id = $2",
+    [Number(projectId), Number(developerId)]
+  );
+  if (dup) {
+    await db.query("UPDATE applications SET status = 'accepted' WHERE id = $1", [dup.id]);
+    return { ok: true, application: await getById(dup.id) };
+  }
+  const rows = await db.query(
+    `INSERT INTO applications (project_id, developer_id, preferred_role, interest_level, message, status)
+     VALUES ($1,$2,'','high','Added to the team by the tech lead','accepted') RETURNING id`,
+    [Number(projectId), Number(developerId)]
+  );
+  return { ok: true, application: await getById(rows[0].id) };
+}
+
 async function setStatus(id, status) {
   if (!STATUSES.includes(status)) return { ok: false, reason: "bad_status" };
   const app = await getById(id);
@@ -61,4 +82,4 @@ async function remove(id) {
   return rows.length > 0;
 }
 
-module.exports = { STATUSES, INTEREST, getById, listByProject, listByDeveloper, apply, setStatus, remove };
+module.exports = { STATUSES, INTEREST, getById, listByProject, listByDeveloper, apply, addMember, setStatus, remove };
