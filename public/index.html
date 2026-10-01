@@ -145,7 +145,12 @@
       .hero-rail .fill { position: absolute; top: 0; bottom: 0; background: #fff; transition: left 0.5s ease, width 0.5s ease; }
 
       /* ---------- Layout ---------- */
-      .wrap { max-width: 1100px; margin: 0 auto; padding: 2rem 1.4rem 5rem; }
+      .wrap { max-width: 1100px; margin: 0 auto; padding: 2rem 1.4rem 5rem; position: relative; z-index: 1; }
+      /* Per-page background video — mirrors the cover's dim + overlay vibe */
+      .pagebg { position: fixed; inset: 0; z-index: 0; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }
+      .pagebg.on { opacity: 1; }
+      .pagebg video { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.5) contrast(1.05); }
+      .pagebg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(6,7,12,0.80) 0%, rgba(6,7,12,0.90) 55%, rgba(6,7,12,0.95) 100%); }
       .view { display: none; }
       .view.active { display: block; animation: fade 0.3s ease; }
       @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
@@ -260,6 +265,9 @@
     </style>
   </head>
   <body>
+    <!-- PER-PAGE BACKGROUND VIDEO (same dimmed style as the cover) -->
+    <div class="pagebg" id="pagebg"><video id="bgvid" autoplay muted loop playsinline></video></div>
+
     <!-- TOP BAR -->
     <div class="topbar">
       <div class="brand"><span><b>Code</b>Box <span style="opacity:.6">Match</span></span></div>
@@ -439,6 +447,18 @@
         }).map((n) => `<button data-nav="${n.id}" class="${state.view === n.id ? "active" : ""}">${n.label}</button>`).join("");
         $("nav").querySelectorAll("[data-nav]").forEach((b) => (b.onclick = () => go(b.dataset.nav)));
       }
+      // Swap the fixed background video per page (home uses its own cover).
+      const PAGE_BG = {
+        projects: "/cover.mp4", devs: "/clip1.webm", coffee: "/clip2.mp4",
+        connections: "/clip1.webm", profile: "/clip2.mp4", apps: "/cover.mp4",
+        lead: "/clip1.webm", admin: "/clip2.mp4",
+      };
+      function setPageBg(view) {
+        const bg = $("pagebg"), v = $("bgvid"), src = PAGE_BG[view];
+        if (!src) { bg.classList.remove("on"); return; }
+        if (v.getAttribute("src") !== src) { v.setAttribute("src", src); v.load(); v.play().catch(() => {}); }
+        bg.classList.add("on");
+      }
       function go(view) {
         // guard role-gated views
         const def = NAV.find((n) => n.id === view);
@@ -447,6 +467,7 @@
         state.view = view;
         document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
         $("view-" + view).classList.add("active");
+        setPageBg(view);
         renderNav();
         if (view === "home") renderHome();
         if (view === "devs") loadDevs();
