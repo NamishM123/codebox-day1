@@ -1,0 +1,152 @@
+<mxfile host="app.diagrams.net" agent="CodeBox Match" version="24.0.0">
+  <diagram id="codebox-arch" name="CodeBox Match Architecture">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="1654" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="CodeBox Match — System Architecture" style="text;html=1;fontSize=22;fontStyle=1;align=center;verticalAlign=middle;fontColor=#0B3D2E;" vertex="1" parent="1">
+          <mxGeometry x="300" y="20" width="560" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- ===================== CLIENT ===================== -->
+        <mxCell id="tier-client" value="Client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F7EF;strokeColor=#1B9E66;fontStyle=1;fontSize=13;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="80" y="80" width="1010" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="spa" value="Browser SPA&#10;public/index.html&#10;(vanilla JS: fetch + Bearer JWT, hash-less view switching)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1B9E66;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="120" y="115" width="420" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="assets" value="Static assets&#10;cover.mp4 · clip1.webm · clip2.mp4&#10;(served from public/)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1B9E66;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="620" y="115" width="420" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- ===================== PLATFORM / ENTRY ===================== -->
+        <mxCell id="tier-platform" value="Vercel (serverless)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF2FF;strokeColor=#4B5EEF;fontStyle=1;fontSize=13;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="80" y="230" width="1010" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="rewrite" value="vercel.json rewrite&#10;/(.*) → /api/index&#10;(single function, includeFiles: public/**)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4B5EEF;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="120" y="265" width="300" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="entry" value="api/index.js&#10;(serverless entry → exports Express app)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4B5EEF;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="450" y="265" width="280" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="server" value="server.js (Express 5 app)&#10;• custom JSON body parser&#10;• express.static(public/)&#10;• GET / → SPA · /health · error handler" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4B5EEF;fontSize=12;align=left;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="760" y="265" width="290" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- ===================== MIDDLEWARE ===================== -->
+        <mxCell id="mw" value="middleware/auth.js&#10;signToken · requireAuth · requireRole&#10;(JWT HS256 · scrypt password hashing)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF4E5;strokeColor=#E08A00;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="400" width="450" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- ===================== ROUTES ===================== -->
+        <mxCell id="tier-routes" value="Routes  (routes/*.js)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3EEFF;strokeColor=#7B4BEF;fontStyle=1;fontSize=13;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="80" y="500" width="1010" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="r-auth" value="auth" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7B4BEF;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="110" y="535" width="110" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="r-profiles" value="profiles" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7B4BEF;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="235" y="535" width="110" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="r-devs" value="developers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7B4BEF;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="360" y="535" width="110" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="r-conns" value="connections" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7B4BEF;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="485" y="535" width="110" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="r-coffee" value="coffee" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7B4BEF;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="610" y="535" width="110" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="r-projects" value="projects" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7B4BEF;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="735" y="535" width="110" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="r-apps" value="applications" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7B4BEF;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="860" y="535" width="110" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="r-admin" value="admin" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7B4BEF;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="985" y="535" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="routes-note" value="Role-gated: developer · tech_lead · admin" style="text;html=1;fontSize=11;fontColor=#555;align=left;" vertex="1" parent="1">
+          <mxGeometry x="110" y="588" width="400" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- ===================== SERVICES ===================== -->
+        <mxCell id="tier-services" value="Services  (services/*.js — business logic)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E7F6FA;strokeColor=#1193B5;fontStyle=1;fontSize=13;verticalAlign=top;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="80" y="660" width="1010" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="s-auth" value="authService&#10;register · authenticate · roles" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1193B5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="110" y="695" width="150" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="s-profile" value="profileService&#10;upsert · listDevelopers(skill)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1193B5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="275" y="695" width="150" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="s-project" value="projectService&#10;CRUD · interested count" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1193B5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="440" y="695" width="150" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="s-app" value="applicationService&#10;apply · addMember · setStatus&#10;(match scoring)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1193B5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="605" y="695" width="160" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="s-conn" value="connectionService&#10;create · setStatus" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1193B5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="780" y="695" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="s-coffee" value="coffeeService&#10;list · create · book" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1193B5;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="935" y="695" width="130" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- ===================== DATA LAYER ===================== -->
+        <mxCell id="db" value="db.js — data access layer&#10;parameterized query / get · schema init · seed&#10;chooses driver by environment" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FDEDED;strokeColor=#C0392B;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="810" width="510" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- ===================== DATABASES ===================== -->
+        <mxCell id="supabase" value="Supabase Postgres  (production)&#10;via pg Pool + DATABASE_URL&#10;tables: members · developer_profiles · projects&#10;applications · connections · coffee_slots" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#D5F5E3;strokeColor=#1E8449;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="300" y="920" width="280" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="pglite" value="PGlite  (local dev / tests)&#10;in-process Postgres&#10;(.pgdata or in-memory)&#10;same SQL dialect" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#FCF3CF;strokeColor=#B7950B;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="620" y="920" width="250" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- ===================== EDGES ===================== -->
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="spa" target="rewrite">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e1l" value="HTTPS / JSON + Bearer JWT" style="text;html=1;fontSize=10;fontColor=#333;" vertex="1" connectable="0" parent="e1"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry></mxCell>
+        </mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="assets" target="server">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="rewrite" target="entry">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#333;" edge="1" parent="1" source="entry" target="server">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#E08A00;" edge="1" parent="1" source="server" target="mw">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#7B4BEF;" edge="1" parent="1" source="mw" target="tier-routes">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e6l" value="auth / role check" style="text;html=1;fontSize=10;fontColor=#7B4BEF;" vertex="1" connectable="0" parent="e6"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry></mxCell>
+        </mxCell>
+        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#1193B5;" edge="1" parent="1" source="tier-routes" target="tier-services">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e7l" value="call" style="text;html=1;fontSize=10;fontColor=#1193B5;" vertex="1" connectable="0" parent="e7"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry></mxCell>
+        </mxCell>
+        <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#C0392B;" edge="1" parent="1" source="tier-services" target="db">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e8l" value="query()" style="text;html=1;fontSize=10;fontColor=#C0392B;" vertex="1" connectable="0" parent="e8"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry></mxCell>
+        </mxCell>
+        <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#1E8449;" edge="1" parent="1" source="db" target="supabase">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e9l" value="prod (DATABASE_URL set)" style="text;html=1;fontSize=10;fontColor=#1E8449;" vertex="1" connectable="0" parent="e9"><mxGeometry x="-0.2" relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry></mxCell>
+        </mxCell>
+        <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=block;strokeColor=#B7950B;dashed=1;" edge="1" parent="1" source="db" target="pglite">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e10l" value="dev / test (no URL)" style="text;html=1;fontSize=10;fontColor=#B7950B;" vertex="1" connectable="0" parent="e10"><mxGeometry x="0.2" relative="1" as="geometry"><mxPoint as="offset"/></mxGeometry></mxCell>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
