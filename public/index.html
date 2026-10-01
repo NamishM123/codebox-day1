@@ -168,8 +168,8 @@
       }
       .pc-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
       .pcard:hover .pc-media img { transform: scale(1.06); }
-      .pc-media .m-grade { position: absolute; inset: 0; mix-blend-mode: color; background: var(--pc-accent, var(--accent)); }
-      .pc-media .m-mult { position: absolute; inset: 0; mix-blend-mode: multiply; opacity: 0.35; background: var(--pc-accent, var(--accent)); }
+      .pc-media .m-grade { position: absolute; inset: 0; mix-blend-mode: color; opacity: 0.45; background: var(--pc-accent, var(--accent)); }
+      .pc-media .m-mult { position: absolute; inset: 0; mix-blend-mode: multiply; opacity: 0.18; background: var(--pc-accent, var(--accent)); }
       .pc-media .m-wash { position: absolute; inset: 0; background: linear-gradient(to top, rgba(6,7,12,0.85), transparent 65%); }
       .pc-media .m-pill { position: absolute; top: 0.7rem; left: 0.7rem; z-index: 2; }
       .pc-media .m-title { position: absolute; left: 0.9rem; right: 0.9rem; bottom: 0.6rem; z-index: 2; }
@@ -360,6 +360,12 @@
         <div class="grid" id="devs-grid"></div>
       </section>
 
+      <!-- CONNECTIONS -->
+      <section class="view" id="view-connections">
+        <div class="view-head"><div><h2>Connections</h2><p>Meet leads &amp; devs — accept a request to swap contacts and build side projects.</p></div></div>
+        <div id="connections-list"></div>
+      </section>
+
       <!-- PROFILE -->
       <section class="view" id="view-profile">
         <div class="view-head"><div><h2>My developer profile</h2><p>Tech leads see this when reviewing your applications.</p></div></div>
@@ -404,6 +410,7 @@
         { id: "home", label: "Home" },
         { id: "projects", label: "Projects" },
         { id: "devs", label: "Developers" },
+        { id: "connections", label: "Connections", auth: true },
         { id: "profile", label: "My Profile", auth: true },
         { id: "apps", label: "My Applications", auth: true },
         { id: "lead", label: "Tech Lead", roles: ["tech_lead", "admin"] },
@@ -428,6 +435,7 @@
         renderNav();
         if (view === "home") renderHome();
         if (view === "devs") loadDevs();
+        if (view === "connections") loadConnections();
         if (view === "profile") loadProfile();
         if (view === "apps") loadMyApps();
         if (view === "lead") loadLead();
@@ -524,6 +532,7 @@
             return;
           }
           g.innerHTML = devs.map(devCard).join("");
+          g.querySelectorAll("[data-connect]").forEach((b) => (b.onclick = () => openConnect(+b.dataset.connect, b.dataset.name)));
         } catch (e) { $("devs-grid").innerHTML = '<div class="empty">Could not load developers.</div>'; }
       }
       function devCard(d) {
@@ -539,7 +548,46 @@
             ${d.bio ? `<p class="desc">${esc(d.bio)}</p>` : ""}
             <div class="badges">${skills}</div>
             ${links ? `<div class="meta" style="font-size:.8rem">${links}</div>` : ""}
+            ${state.user && state.user.id !== d.id ? `<div style="margin-top:.8rem"><button class="btn sm" data-connect="${d.id}" data-name="${esc(d.name || d.username)}">Connect</button></div>` : ""}
           </div></div>`;
+      }
+      function openConnect(id, name) {
+        if (!state.user) return openAuth();
+        openModal(`
+          <button class="x" onclick="closeModal()">&times;</button>
+          <h3>Connect with ${esc(name)}</h3>
+          <div class="field"><label>Intro message (say hi, what you'd build together)</label><textarea id="cn-msg" placeholder="Hey! I'd love to help on a side project…"></textarea></div>
+          <button class="btn" style="width:100%" id="cn-send">Send request</button>
+          <div class="err" id="cn-err"></div>`);
+        $("cn-send").onclick = async () => {
+          const res = await api("/api/connections", { method: "POST", body: JSON.stringify({ to_id: id, message: $("cn-msg").value.trim() }) });
+          const d = await res.json().catch(() => ({}));
+          if (!res.ok) { $("cn-err").textContent = d.error || "Could not send"; return; }
+          closeModal();
+        };
+      }
+      async function loadConnections() {
+        const res = await api("/api/connections/mine");
+        const list = await res.json();
+        const el = $("connections-list");
+        if (!Array.isArray(list) || !list.length) { el.innerHTML = `<div class="empty">No connections yet. Find someone on the Developers page and hit Connect.</div>`; return; }
+        el.innerHTML = `<div class="grid">${list.map(connCard).join("")}</div>`;
+        el.querySelectorAll("[data-cstatus]").forEach((b) => (b.onclick = async () => {
+          await api("/api/connections/" + b.dataset.id + "/status", { method: "PUT", body: JSON.stringify({ status: b.dataset.cstatus }) });
+          loadConnections();
+        }));
+      }
+      function connCard(c) {
+        const dir = c.incoming ? "wants to connect" : "you reached out";
+        const gh = c.status === "accepted" && c.other_github ? `<div class="meta" style="font-size:.8rem;margin-top:.4rem"><a href="${esc(c.other_github)}" target="_blank" rel="noopener">${esc(c.other_github)}</a></div>` : "";
+        let actions = "";
+        if (c.incoming && c.status === "pending") actions = `<div class="pc-actions" style="margin-top:.6rem"><button class="btn ok sm" data-cstatus="accepted" data-id="${c.id}">Accept</button><button class="btn danger sm" data-cstatus="declined" data-id="${c.id}">Decline</button></div>`;
+        return `<div class="pcard"><div class="pc-body">
+          <div class="pc-top"><div><span class="pill ${esc(c.status)}">${esc(c.status)}</span><h3>${esc(c.other_name)}</h3>
+          <div class="by">${dir}</div></div></div>
+          ${c.message ? `<p class="desc">&ldquo;${esc(c.message)}&rdquo;</p>` : ""}
+          ${gh}${actions}
+        </div></div>`;
       }
 
       // ---------- Landing ----------

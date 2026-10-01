@@ -92,6 +92,16 @@ async function initSchema() {
       created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
     )`);
   await rawQuery(`
+    CREATE TABLE IF NOT EXISTS connections (
+      id         SERIAL PRIMARY KEY,
+      from_id    INTEGER NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+      to_id      INTEGER NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+      message    TEXT NOT NULL DEFAULT '',
+      status     TEXT NOT NULL DEFAULT 'pending',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      UNIQUE (from_id, to_id)
+    )`);
+  await rawQuery(`
     CREATE TABLE IF NOT EXISTS applications (
       id             SERIAL PRIMARY KEY,
       project_id     INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
