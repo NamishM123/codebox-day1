@@ -10,6 +10,9 @@ const FIELDS = [
   "preferred_roles",
   "github_url",
   "portfolio_url",
+  "location",
+  "year",
+  "timezone",
 ];
 
 function shape(row) {
@@ -55,7 +58,8 @@ async function listDevelopers(skill) {
   const base = `
     SELECT m.id, m.username, m.name, m.role,
            dp.skills, dp.experience_level, dp.availability,
-           dp.preferred_roles, dp.github_url, dp.portfolio_url, dp.bio
+           dp.preferred_roles, dp.github_url, dp.portfolio_url, dp.bio,
+           dp.location, dp.year, dp.timezone
     FROM members m
     LEFT JOIN developer_profiles dp ON dp.member_id = m.id`;
   const rows =

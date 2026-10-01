@@ -360,6 +360,20 @@
         <div class="grid" id="devs-grid"></div>
       </section>
 
+      <!-- COFFEE CHATS -->
+      <section class="view" id="view-coffee">
+        <div class="view-head"><div><h2>Coffee chats</h2><p>Offer a time to chat, or book a slot with a lead or dev.</p></div></div>
+        <div class="card hidden" id="coffee-offer" style="margin-bottom:1.2rem">
+          <div class="row2">
+            <div class="field"><label>When</label><input id="cf-time" placeholder="Fri 3pm, or a Calendly link" /></div>
+            <div class="field"><label>Topic (optional)</label><input id="cf-topic" placeholder="Career advice, side projects…" /></div>
+          </div>
+          <button class="btn" id="cf-offer-btn">Offer this slot</button>
+          <div class="err" id="cf-err"></div>
+        </div>
+        <div class="grid" id="coffee-grid"></div>
+      </section>
+
       <!-- CONNECTIONS -->
       <section class="view" id="view-connections">
         <div class="view-head"><div><h2>Connections</h2><p>Meet leads &amp; devs — accept a request to swap contacts and build side projects.</p></div></div>
@@ -411,6 +425,7 @@
         { id: "projects", label: "Projects" },
         { id: "devs", label: "Developers" },
         { id: "connections", label: "Connections", auth: true },
+        { id: "coffee", label: "Coffee Chats" },
         { id: "profile", label: "My Profile", auth: true },
         { id: "apps", label: "My Applications", auth: true },
         { id: "lead", label: "Tech Lead", roles: ["tech_lead", "admin"] },
@@ -436,6 +451,7 @@
         if (view === "home") renderHome();
         if (view === "devs") loadDevs();
         if (view === "connections") loadConnections();
+        if (view === "coffee") loadCoffee();
         if (view === "profile") loadProfile();
         if (view === "apps") loadMyApps();
         if (view === "lead") loadLead();
@@ -543,7 +559,7 @@
             <div class="pc-top"><div>
               <span class="role-pill ${esc(d.role)}">${esc(d.role.replace("_"," "))}</span>
               <h3>${esc(d.name || d.username)}</h3>
-              <div class="by">@${esc(d.username)}${d.experience_level ? " · " + esc(d.experience_level) : ""}${d.availability ? " · " + esc(d.availability) : ""}</div>
+              <div class="by">@${esc(d.username)}${d.experience_level ? " · " + esc(d.experience_level) : ""}${d.year ? " · " + esc(d.year) : ""}${d.location ? " · " + esc(d.location) : ""}${d.timezone ? " · " + esc(d.timezone) : ""}${d.availability ? " · " + esc(d.availability) : ""}</div>
             </div></div>
             ${d.bio ? `<p class="desc">${esc(d.bio)}</p>` : ""}
             <div class="badges">${skills}</div>
@@ -588,6 +604,46 @@
           ${c.message ? `<p class="desc">&ldquo;${esc(c.message)}&rdquo;</p>` : ""}
           ${gh}${actions}
         </div></div>`;
+      }
+
+      // ---------- Coffee chats ----------
+      async function loadCoffee() {
+        $("coffee-offer").classList.toggle("hidden", !state.user);
+        const res = await api("/api/coffee");
+        const slots = await res.json();
+        const g = $("coffee-grid");
+        g.innerHTML = !slots.length
+          ? `<div class="empty">No coffee slots yet.${state.user ? " Offer one above!" : " Log in to offer or book one."}</div>`
+          : slots.map(coffeeCard).join("");
+        g.querySelectorAll("[data-book]").forEach((b) => (b.onclick = () => coffeeBook(b.dataset.book)));
+        g.querySelectorAll("[data-cfdel]").forEach((b) => (b.onclick = () => coffeeDel(b.dataset.cfdel)));
+      }
+      function coffeeCard(s) {
+        const mine = state.user && state.user.id === s.host_id;
+        const booked = s.status === "booked";
+        let action = "";
+        if (mine) action = `<button class="btn danger sm" data-cfdel="${s.id}">Remove</button>`;
+        else if (booked) action = `<span class="pill accepted">booked${s.booker ? " · " + esc(s.booker_name || s.booker) : ""}</span>`;
+        else if (state.user) action = `<button class="btn sm" data-book="${s.id}">Book</button>`;
+        else action = `<span class="meta" style="font-size:.8rem">Log in to book</span>`;
+        return `<div class="pcard"><div class="pc-body">
+          <div class="pc-top"><div>
+            <span class="role-pill ${esc(s.host_role)}">${esc(s.host_role.replace("_"," "))}</span>
+            <h3>&#9749; ${esc(s.slot_time)}</h3>
+            <div class="by">with ${esc(s.host_name || s.host)}${s.topic ? " · " + esc(s.topic) : ""}</div>
+          </div></div>
+          <div class="pc-foot"><span class="meta">${booked ? "Booked" : "Open"}</span><div class="pc-actions">${action}</div></div>
+        </div></div>`;
+      }
+      async function coffeeBook(id) {
+        const res = await api("/api/coffee/" + id + "/book", { method: "POST" });
+        if (!res.ok) { const d = await res.json().catch(() => ({})); alert(d.error || "Could not book"); }
+        loadCoffee();
+      }
+      async function coffeeDel(id) {
+        if (!confirm("Remove this slot?")) return;
+        const res = await api("/api/coffee/" + id, { method: "DELETE" });
+        if (res.ok || res.status === 204) loadCoffee();
       }
 
       // ---------- Landing ----------
@@ -792,6 +848,11 @@
             <div class="field"><label>GitHub URL</label><input id="pr-gh" value="${esc(p.github_url||"")}" placeholder="https://github.com/you" /></div>
             <div class="field"><label>Portfolio URL</label><input id="pr-pf" value="${esc(p.portfolio_url||"")}" placeholder="https://you.dev" /></div>
           </div>
+          <div class="row2">
+            <div class="field"><label>Location</label><input id="pr-loc" value="${esc(p.location||"")}" placeholder="Toronto, CA" /></div>
+            <div class="field"><label>Year</label><input id="pr-year" value="${esc(p.year||"")}" placeholder="Sophomore" /></div>
+          </div>
+          <div class="field"><label>Timezone</label><input id="pr-tz" value="${esc(p.timezone||"")}" placeholder="EST (UTC-5)" /></div>
           <div class="field"><label>Short bio</label><textarea id="pr-bio" placeholder="A couple sentences about you.">${esc(p.bio||"")}</textarea></div>
           <button class="btn" id="pr-save">Save profile</button> <span id="pr-saved" style="color:var(--ok);font-size:.85rem;margin-left:.6rem"></span>
         `;
@@ -801,6 +862,7 @@
             experience_level: $("pr-exp").value, availability: $("pr-avail").value.trim(),
             preferred_roles: $("pr-roles").value.split(",").map((s)=>s.trim()).filter(Boolean),
             github_url: $("pr-gh").value.trim(), portfolio_url: $("pr-pf").value.trim(), bio: $("pr-bio").value.trim(),
+            location: $("pr-loc").value.trim(), year: $("pr-year").value.trim(), timezone: $("pr-tz").value.trim(),
           };
           await api("/api/profiles/me", { method: "PUT", body: JSON.stringify(body) });
           $("pr-saved").textContent = "Saved ✓"; setTimeout(() => ($("pr-saved").textContent = ""), 1800);
@@ -933,6 +995,13 @@
 
       // ---------- New project button ----------
       $("new-project-btn").onclick = () => (state.user ? openProjectForm() : openAuth());
+      $("cf-offer-btn").onclick = async () => {
+        $("cf-err").textContent = "";
+        const res = await api("/api/coffee", { method: "POST", body: JSON.stringify({ slot_time: $("cf-time").value.trim(), topic: $("cf-topic").value.trim() }) });
+        const d = await res.json().catch(() => ({}));
+        if (!res.ok) { $("cf-err").textContent = d.error || "Could not offer"; return; }
+        $("cf-time").value = ""; $("cf-topic").value = ""; loadCoffee();
+      };
       $("dev-search").onclick = () => loadDevs();
       $("dev-clear").onclick = () => { $("dev-q").value = ""; loadDevs(""); };
       $("dev-q").addEventListener("keydown", (e) => { if (e.key === "Enter") loadDevs(); });

@@ -72,7 +72,20 @@ async function initSchema() {
       preferred_roles  TEXT NOT NULL DEFAULT '',
       github_url       TEXT NOT NULL DEFAULT '',
       portfolio_url    TEXT NOT NULL DEFAULT '',
+      location         TEXT NOT NULL DEFAULT '',
+      year             TEXT NOT NULL DEFAULT '',
+      timezone         TEXT NOT NULL DEFAULT '',
       updated_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+    )`);
+  await rawQuery(`
+    CREATE TABLE IF NOT EXISTS coffee_slots (
+      id         SERIAL PRIMARY KEY,
+      host_id    INTEGER NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+      slot_time  TEXT NOT NULL,
+      topic      TEXT NOT NULL DEFAULT '',
+      status     TEXT NOT NULL DEFAULT 'open',
+      booked_by  INTEGER REFERENCES members(id) ON DELETE SET NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )`);
   await rawQuery(`
     CREATE TABLE IF NOT EXISTS projects (
