@@ -7,9 +7,11 @@ const INTEREST = ["high", "medium", "low"];
 
 const BASE = `
   SELECT a.*, m.username AS developer, m.name AS developer_name,
+         dp.skills AS dev_skills,
          p.title AS project_title, p.created_by AS project_owner, p.tech_lead_id AS project_lead
   FROM applications a
   JOIN members m ON m.id = a.developer_id
+  LEFT JOIN developer_profiles dp ON dp.member_id = a.developer_id
   JOIN projects p ON p.id = a.project_id`;
 
 async function getById(id) {

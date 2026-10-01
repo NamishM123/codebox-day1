@@ -733,7 +733,7 @@
           <div style="margin-bottom:.8rem"><label>Project status</label>
             <select id="proj-status">${["open","reviewing","team_formed","closed"].map((s)=>`<option value="${s}" ${p.status===s?"selected":""}>${s.replace("_"," ")}</option>`).join("")}</select>
           </div>
-          <div id="applicants">${!apps.length ? '<div class="empty">No applicants yet.</div>' : apps.map(applicantRow).join("")}</div>
+          <div id="applicants">${!apps.length ? '<div class="empty">No applicants yet.</div>' : apps.map((a) => applicantRow(a, p)).join("")}</div>
         `);
         $("proj-status").onchange = async (e) => {
           await api("/api/projects/" + projectId, { method: "PUT", body: JSON.stringify({ status: e.target.value }) });
@@ -741,11 +741,20 @@
         };
         bindApplicantButtons(projectId);
       }
-      function applicantRow(a) {
+      function matchPct(devSkills, project) {
+        const want = [...(project.tech_stack || []), ...(project.needed_roles || [])].map((s) => s.toLowerCase()).filter(Boolean);
+        if (!want.length) return null;
+        const have = String(devSkills || "").toLowerCase();
+        const hits = want.filter((w) => have.includes(w)).length;
+        return Math.round((hits / want.length) * 100);
+      }
+      function applicantRow(a, project) {
+        const pct = matchPct(a.dev_skills, project);
+        const badge = pct != null ? ` <span class="pill ${pct >= 50 ? "accepted" : "pending"}">${pct}% match</span>` : "";
         return `
           <div class="applicant">
             <div>
-              <div class="ai">${esc(a.developer_name || a.developer)} <span class="pill ${esc(a.status)}">${esc(a.status)}</span></div>
+              <div class="ai">${esc(a.developer_name || a.developer)} <span class="pill ${esc(a.status)}">${esc(a.status)}</span>${badge}</div>
               <div class="msg">wants <b>${esc(a.preferred_role || "any role")}</b> &middot; ${esc(a.interest_level)} interest</div>
               ${a.message ? `<div class="msg">&ldquo;${esc(a.message)}&rdquo;</div>` : ""}
             </div>
