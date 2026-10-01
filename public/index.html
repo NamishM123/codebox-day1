@@ -149,8 +149,8 @@
       /* Per-page background video — mirrors the cover's dim + overlay vibe */
       .pagebg { position: fixed; inset: 0; z-index: 0; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }
       .pagebg.on { opacity: 1; }
-      .pagebg video { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.5) contrast(1.05); }
-      .pagebg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(6,7,12,0.80) 0%, rgba(6,7,12,0.90) 55%, rgba(6,7,12,0.95) 100%); }
+      .pagebg video { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.62) contrast(1.08); }
+      .pagebg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(6,7,12,0.62) 0%, rgba(6,7,12,0.82) 55%, rgba(6,7,12,0.92) 100%); }
       .view { display: none; }
       .view.active { display: block; animation: fade 0.3s ease; }
       @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
@@ -455,6 +455,11 @@
       };
       function setPageBg(view) {
         const bg = $("pagebg"), v = $("bgvid"), src = PAGE_BG[view];
+        // The top hero cover only belongs on home; elsewhere its video would
+        // dominate every page and look identical — hide it so each page's own
+        // background video shows through.
+        const cover = document.querySelector(".cover");
+        if (cover) cover.style.display = view === "home" ? "" : "none";
         if (!src) { bg.classList.remove("on"); return; }
         if (v.getAttribute("src") !== src) { v.setAttribute("src", src); v.load(); v.play().catch(() => {}); }
         bg.classList.add("on");
