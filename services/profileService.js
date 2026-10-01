@@ -50,4 +50,23 @@ async function upsertProfile(memberId, data) {
   return getByMemberId(memberId);
 }
 
-module.exports = { getByMemberId, upsertProfile };
+// Directory of members + their profiles, optionally filtered by a skill term.
+async function listDevelopers(skill) {
+  const base = `
+    SELECT m.id, m.username, m.name, m.role,
+           dp.skills, dp.experience_level, dp.availability,
+           dp.preferred_roles, dp.github_url, dp.portfolio_url, dp.bio
+    FROM members m
+    LEFT JOIN developer_profiles dp ON dp.member_id = m.id`;
+  const rows =
+    skill && skill.trim()
+      ? await db.query(base + " WHERE dp.skills ILIKE $1 ORDER BY m.name", ["%" + skill.trim() + "%"])
+      : await db.query(base + " ORDER BY m.name");
+  return rows.map((r) => ({
+    ...r,
+    skills: r.skills ? r.skills.split(",").map((s) => s.trim()).filter(Boolean) : [],
+    preferred_roles: r.preferred_roles ? r.preferred_roles.split(",").map((s) => s.trim()).filter(Boolean) : [],
+  }));
+}
+
+module.exports = { getByMemberId, upsertProfile, listDevelopers };

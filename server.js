@@ -11,6 +11,7 @@ const express = require("express");
 
 const authRouter = require("./routes/auth");
 const profilesRouter = require("./routes/profiles");
+const developersRouter = require("./routes/developers");
 const projectsRouter = require("./routes/projects");
 const applicationsRouter = require("./routes/applications");
 const adminRouter = require("./routes/admin");
@@ -100,6 +101,7 @@ app.get("/api/dbwrite", async (req, res) => {
 // API
 app.use("/api/auth", authRouter);
 app.use("/api/profiles", profilesRouter);
+app.use("/api/developers", developersRouter);
 app.use("/api/projects", projectsRouter);
 app.use("/api/applications", applicationsRouter);
 app.use("/api/admin", adminRouter);

@@ -349,6 +349,17 @@
         <div class="grid" id="projects-grid"></div>
       </section>
 
+      <!-- DEVELOPERS DIRECTORY + SKILL SEARCH -->
+      <section class="view" id="view-devs">
+        <div class="view-head"><div><h2>Find developers</h2><p>Search members by skill to staff your project.</p></div></div>
+        <div style="display:flex;gap:.6rem;margin-bottom:1.2rem;flex-wrap:wrap">
+          <input id="dev-q" placeholder="Search a skill — e.g. React, Python, Rust" style="flex:1 1 260px" />
+          <button class="btn" id="dev-search">Search</button>
+          <button class="btn ghost" id="dev-clear">Clear</button>
+        </div>
+        <div class="grid" id="devs-grid"></div>
+      </section>
+
       <!-- PROFILE -->
       <section class="view" id="view-profile">
         <div class="view-head"><div><h2>My developer profile</h2><p>Tech leads see this when reviewing your applications.</p></div></div>
@@ -392,6 +403,7 @@
       const NAV = [
         { id: "home", label: "Home" },
         { id: "projects", label: "Projects" },
+        { id: "devs", label: "Developers" },
         { id: "profile", label: "My Profile", auth: true },
         { id: "apps", label: "My Applications", auth: true },
         { id: "lead", label: "Tech Lead", roles: ["tech_lead", "admin"] },
@@ -415,6 +427,7 @@
         $("view-" + view).classList.add("active");
         renderNav();
         if (view === "home") renderHome();
+        if (view === "devs") loadDevs();
         if (view === "profile") loadProfile();
         if (view === "apps") loadMyApps();
         if (view === "lead") loadLead();
@@ -499,6 +512,36 @@
         grid.innerHTML = state.projects.map(projectCard).join("");
         bindCards(grid);
       }
+      // ---------- Developers directory ----------
+      async function loadDevs(skill) {
+        try {
+          const q = skill != null ? skill : ($("dev-q") ? $("dev-q").value.trim() : "");
+          const res = await api("/api/developers" + (q ? "?skill=" + encodeURIComponent(q) : ""));
+          const devs = await res.json();
+          const g = $("devs-grid");
+          if (!Array.isArray(devs) || !devs.length) {
+            g.innerHTML = `<div class="empty">No developers${q ? " with “" + esc(q) + "”" : ""} yet.</div>`;
+            return;
+          }
+          g.innerHTML = devs.map(devCard).join("");
+        } catch (e) { $("devs-grid").innerHTML = '<div class="empty">Could not load developers.</div>'; }
+      }
+      function devCard(d) {
+        const skills = d.skills.length ? d.skills.map((s) => `<span class="badge">${esc(s)}</span>`).join("") : '<span class="meta" style="font-size:.76rem;color:var(--muted)">No skills listed yet</span>';
+        const links = [d.github_url && `<a href="${esc(d.github_url)}" target="_blank" rel="noopener">GitHub</a>`, d.portfolio_url && `<a href="${esc(d.portfolio_url)}" target="_blank" rel="noopener">Portfolio</a>`].filter(Boolean).join(" · ");
+        return `
+          <div class="pcard"><div class="pc-body">
+            <div class="pc-top"><div>
+              <span class="role-pill ${esc(d.role)}">${esc(d.role.replace("_"," "))}</span>
+              <h3>${esc(d.name || d.username)}</h3>
+              <div class="by">@${esc(d.username)}${d.experience_level ? " · " + esc(d.experience_level) : ""}${d.availability ? " · " + esc(d.availability) : ""}</div>
+            </div></div>
+            ${d.bio ? `<p class="desc">${esc(d.bio)}</p>` : ""}
+            <div class="badges">${skills}</div>
+            ${links ? `<div class="meta" style="font-size:.8rem">${links}</div>` : ""}
+          </div></div>`;
+      }
+
       // ---------- Landing ----------
       function renderHome() {
         const total = state.projects.length;
@@ -833,6 +876,9 @@
 
       // ---------- New project button ----------
       $("new-project-btn").onclick = () => (state.user ? openProjectForm() : openAuth());
+      $("dev-search").onclick = () => loadDevs();
+      $("dev-clear").onclick = () => { $("dev-q").value = ""; loadDevs(""); };
+      $("dev-q").addEventListener("keydown", (e) => { if (e.key === "Enter") loadDevs(); });
       $("cta-browse").onclick = () => go("projects");
       $("cta-all").onclick = () => go("projects");
       $("cta-join").onclick = () => (state.user ? go("projects") : openAuth("register"));
