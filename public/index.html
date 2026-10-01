@@ -6,14 +6,14 @@
     <title>CodeBox Match</title>
     <style>
       :root {
-        --bg: #06070c;
+        --bg: #040806;
         --panel: rgba(20, 24, 38, 0.72);
         --panel-solid: #12162a;
         --line: rgba(255, 255, 255, 0.09);
         --line-strong: rgba(255, 255, 255, 0.18);
         --text: #eef2fb;
         --muted: #9aa6c4;
-        --accent: #4da3ff;
+        --accent: #00e676;
         --accent-ink: #0a0620;
         --danger: #ff6b7a;
         --ok: #46e5a0;
@@ -24,8 +24,8 @@
       body {
         font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
         background:
-          radial-gradient(1100px 500px at 80% -10%, #10233b 0%, transparent 55%),
-          radial-gradient(900px 500px at 0% 0%, #0b1c2e 0%, transparent 50%),
+          radial-gradient(1100px 500px at 80% -10%, #06160e 0%, transparent 55%),
+          radial-gradient(900px 500px at 0% 0%, #041109 0%, transparent 50%),
           var(--bg);
         color: var(--text);
         min-height: 100vh;
@@ -52,11 +52,11 @@
         transition: all 0.15s ease;
       }
       .nav button:hover { color: var(--text); background: rgba(255,255,255,0.05); }
-      .nav button.active { color: var(--text); background: rgba(77,163,255,0.18); box-shadow: inset 0 0 0 1px rgba(77,163,255,0.4); }
+      .nav button.active { color: var(--text); background: rgba(0,230,118,0.18); box-shadow: inset 0 0 0 1px rgba(0,230,118,0.4); }
       .whoami { display: flex; align-items: center; gap: 0.6rem; font-size: 0.85rem; }
       .role-pill {
         font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;
-        padding: 0.18rem 0.5rem; border-radius: 999px; background: rgba(77,163,255,0.2); color: #cfe4ff;
+        padding: 0.18rem 0.5rem; border-radius: 999px; background: rgba(0,230,118,0.2); color: #b9ffd9;
       }
       .role-pill.tech_lead { background: rgba(70,229,160,0.16); color: #8ff2c9; }
       .role-pill.admin { background: rgba(255,207,107,0.16); color: var(--warn); }
@@ -172,14 +172,14 @@
       .pcard .desc { color: #c7d0e6; font-size: 0.88rem; margin: 0.7rem 0 0.8rem; line-height: 1.45; }
       .badges { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.6rem; }
       .badge { font-size: 0.7rem; padding: 0.2rem 0.55rem; border-radius: 999px; background: rgba(255,255,255,0.07); border: 1px solid var(--line); color: #d7def0; }
-      .badge.role { background: rgba(77,163,255,0.14); border-color: rgba(77,163,255,0.3); color: #cfe4ff; }
+      .badge.role { background: rgba(0,230,118,0.14); border-color: rgba(0,230,118,0.3); color: #b9ffd9; }
       .pill {
         font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700;
         padding: 0.22rem 0.55rem; border-radius: 999px;
       }
       .pill.open { background: rgba(70,229,160,0.16); color: var(--ok); }
       .pill.reviewing { background: rgba(255,207,107,0.16); color: var(--warn); }
-      .pill.team_formed { background: rgba(77,163,255,0.18); color: #cfe4ff; }
+      .pill.team_formed { background: rgba(0,230,118,0.18); color: #b9ffd9; }
       .pill.closed { background: rgba(255,107,122,0.14); color: var(--danger); }
       .pill.pending { background: rgba(255,207,107,0.16); color: var(--warn); }
       .pill.accepted { background: rgba(70,229,160,0.16); color: var(--ok); }
@@ -207,7 +207,7 @@
       .lead { text-align: center; max-width: 760px; margin: 0 auto 2.5rem; }
       .lead .eyebrow { font-size: 0.72rem; letter-spacing: 0.24em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
       .lead h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); line-height: 1.02; letter-spacing: -0.03em; margin: 0.6rem 0 0.7rem; }
-      .lead h1 .grad { background: linear-gradient(100deg, var(--accent), #4da3ff 60%, var(--warn)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+      .lead h1 .grad { background: linear-gradient(100deg, var(--accent), #00e676 60%, var(--warn)); -webkit-background-clip: text; background-clip: text; color: transparent; }
       .lead p { color: var(--muted); font-size: 1.05rem; line-height: 1.55; margin: 0 auto; max-width: 620px; }
       .cta-row { display: flex; gap: 0.7rem; justify-content: center; margin-top: 1.4rem; flex-wrap: wrap; }
       .btn.lg { padding: 0.8rem 1.4rem; font-size: 0.95rem; border-radius: 12px; }
@@ -290,7 +290,7 @@
       <section class="view active" id="view-home">
         <div class="lead">
           <div class="eyebrow">CodeBox &middot; Project Matching</div>
-          <h1>Where club ideas find <span class="grad">their people</span>.</h1>
+          <h1>Mapping ideas to <span class="grad">devs</span>.</h1>
           <p>Submit a project idea, browse what everyone's building, and get matched onto a team. Developers apply, tech leads pick their crew, and admins keep it all running.</p>
           <div class="cta-row">
             <button class="btn lg" id="cta-browse">Browse projects</button>
@@ -553,7 +553,7 @@
           <div class="field"><label>Cover image URL (optional &mdash; a nice one is auto-picked if blank)</label><input id="f-image" value="${esc(v("image"))}" placeholder="https://..." /></div>
           <div class="row2">
             <div class="field"><label>Timeline</label><input id="f-time" value="${esc(v("timeline"))}" placeholder="6 weeks" /></div>
-            <div class="field"><label>Accent color</label><input id="f-accent" type="color" value="${esc(v("accent","#4da3ff"))}" style="height:42px;padding:4px" /></div>
+            <div class="field"><label>Accent color</label><input id="f-accent" type="color" value="${esc(v("accent","#00e676"))}" style="height:42px;padding:4px" /></div>
           </div>
           ${p ? `<div class="field"><label>Status</label><select id="f-status">${["open","reviewing","team_formed","closed"].map((s)=>`<option value="${s}" ${p.status===s?"selected":""}>${s.replace("_"," ")}</option>`).join("")}</select></div>` : ""}
           <button class="btn" style="width:100%" id="f-submit">${p ? "Save changes" : "Submit idea"}</button>
