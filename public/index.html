@@ -149,8 +149,8 @@
       /* Per-page background video — mirrors the cover's dim + overlay vibe */
       .pagebg { position: fixed; inset: 0; z-index: 0; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }
       .pagebg.on { opacity: 1; }
-      .pagebg video { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.62) contrast(1.08); }
-      .pagebg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(6,7,12,0.62) 0%, rgba(6,7,12,0.82) 55%, rgba(6,7,12,0.92) 100%); }
+      .pagebg video { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.85) contrast(1.08); }
+      .pagebg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(6,7,12,0.42) 0%, rgba(6,7,12,0.66) 55%, rgba(6,7,12,0.82) 100%); }
       .view { display: none; }
       .view.active { display: block; animation: fade 0.3s ease; }
       @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
@@ -449,9 +449,9 @@
       }
       // Swap the fixed background video per page (home uses its own cover).
       const PAGE_BG = {
-        projects: "/cover.mp4", devs: "/clip1.webm", coffee: "/clip2.mp4",
-        connections: "/clip1.webm", profile: "/clip2.mp4", apps: "/cover.mp4",
-        lead: "/clip1.webm", admin: "/clip2.mp4",
+        projects: "/clip1.webm", devs: "/clip2.mp4", coffee: "/cover.mp4",
+        connections: "/clip2.mp4", profile: "/clip1.webm", apps: "/cover.mp4",
+        lead: "/clip2.mp4", admin: "/clip1.webm",
       };
       function setPageBg(view) {
         const bg = $("pagebg"), v = $("bgvid"), src = PAGE_BG[view];
@@ -730,7 +730,7 @@
         const roles = p.needed_roles.map((r) => `<span class="badge role">${esc(r)}</span>`).join("");
         const manager = isManager(p);
         let actions = "";
-        if (state.user && !manager) actions += `<button class="btn sm" data-apply="${p.id}">I'm interested</button>`;
+        if (state.user && !manager) actions += `<button class="btn sm" data-apply="${p.id}">Request to join</button>`;
         if (manager) actions += `<button class="btn ghost sm" data-appl="${p.id}">Applicants (${p.interested})</button>
                                  <button class="btn ghost sm" data-edit="${p.id}">Edit</button>
                                  <button class="btn danger sm" data-del="${p.id}">Delete</button>`;
